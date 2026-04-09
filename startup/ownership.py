@@ -1,18 +1,13 @@
 import re
 import os
 from pathlib import Path
+from config.manager import config_manager
 
 GD_APP_ID = "322170"
 
 def get_steam_root():
     """Tries to find the Steam installation directory."""
-    paths = [
-        Path.home() / ".steam/steam",
-        Path.home() / ".steam/debian-installation",
-        Path.home() / ".local/share/Steam",
-        Path.home() / ".var/app/com.valvesoftware.Steam/.local/share/Steam",
-        Path.home() / ".var/app/com.valvesoftware.Steam/.steam/steam",
-    ]
+    paths = config_manager.get_steam_roots()
     for p in paths:
         if p.exists():
             return p

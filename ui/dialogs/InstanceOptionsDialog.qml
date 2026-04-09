@@ -16,6 +16,7 @@ Dialog {
     signal profileDeleted(string name)
     signal geodeToggled(bool enabled)
     signal instanceRenamed(string newName)
+    signal installGeode()
     
     title: qsTr("Instance Options")
     x: (window.width - width) / 2
@@ -25,6 +26,15 @@ Dialog {
     implicitWidth: 500
     
     onOpened: refresh()
+    
+    Connections {
+        target: launcher ? launcher.instanceModel() : null
+        function onDataChanged(topLeft, bottomRight, roles) {
+            if (root.instanceIndex !== -1 && topLeft.row <= root.instanceIndex && bottomRight.row >= root.instanceIndex) {
+                root.refresh()
+            }
+        }
+    }
     
     function refresh() {
         if (root.instanceIndex === -1) return
@@ -44,6 +54,16 @@ Dialog {
     contentItem: ColumnLayout {
         spacing: 15
         
+        Label {
+            id: statusLabel
+            text: ""
+            visible: text !== ""
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            color: palette.highlight
+            font.pixelSize: 11
+        }
+
         GroupBox {
             title: qsTr("General")
             Layout.fillWidth: true
@@ -66,10 +86,18 @@ Dialog {
             ColumnLayout {
                 anchors.fill: parent
 
-                CheckBox {
-                    id: geodeEnabledCheck
-                    text: qsTr("Enable Geode")
-                    onCheckedChanged: root.geodeToggled(checked)
+                RowLayout {
+                    Layout.fillWidth: true
+                    CheckBox {
+                        id: geodeEnabledCheck
+                        text: qsTr("Enable Geode")
+                        onCheckedChanged: root.geodeToggled(checked)
+                    }
+                    Item { Layout.fillWidth: true }
+                    Button {
+                        text: qsTr("Download/Update Loader")
+                        onClicked: root.installGeode()
+                    }
                 }
                 
                 Frame {

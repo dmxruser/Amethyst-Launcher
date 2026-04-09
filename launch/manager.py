@@ -2,11 +2,13 @@ import subprocess
 import re
 import os
 import shutil
+import sys
 from pathlib import Path
 from PySide6.QtCore import QAbstractListModel, Qt, QModelIndex
 
 from geode.loadprofile import activate_profile, deactivate_profile, get_geode_data_dir
 from startup.ownership import check_gd_ownership
+from config.manager import config_manager
 
 GD_APP_ID = "322170"
 
@@ -92,13 +94,7 @@ class LaunchManager:
         self.model.clear()
         
         # 1. Scan Steam installations
-        steam_root_paths = [
-            Path.home() / ".steam/steam",
-            Path.home() / ".steam/debian-installation",
-            Path.home() / ".local/share/Steam",
-            Path.home() / ".var/app/com.valvesoftware.Steam/.local/share/Steam",
-            Path.home() / ".var/app/com.valvesoftware.Steam/.steam/steam",
-        ]
+        steam_root_paths = config_manager.get_steam_roots()
         
         found_any = False
         processed_libraries = set()
@@ -117,7 +113,7 @@ class LaunchManager:
                     processed_libraries.add(str(gd_path))
 
         # 2. Scan Local installations (Minecraft-style)
-        instances_dir = Path("instances")
+        instances_dir = config_manager.get_default_instances_dir()
         if instances_dir.exists() and instances_dir.is_dir():
             for item in instances_dir.iterdir():
                 if item.is_dir():
@@ -127,24 +123,7 @@ class LaunchManager:
                         self._add_with_geode_check(item.name, item, source="Local")
 
     def _get_geode_data_dir(self, gd_path: Path):
-        gd_geode = gd_path / "geode"
-        if gd_geode.exists() and gd_geode.is_dir():
-            return gd_geode
-        steam_path = gd_path
-        while steam_path.parent != steam_path:
-            if str(steam_path.name) == "steamapps":
-                compat = steam_path.parent / "compatdata" / GD_APP_ID / "pfx" / "drive_c" / "ProgramData" / "Geode"
-                if compat.exists():
-                    return compat
-                break
-            steam_path = steam_path.parent
-        local_share = Path.home() / ".local/share/Geode"
-        if local_share.exists():
-            return local_share
-        config_geode = Path.home() / ".config/geode"
-        if config_geode.exists():
-            return config_geode
-        return None
+        return get_geode_data_dir(gd_path)
 
     def _scan_geode_profiles(self, geode_data_dir: Path):
         profiles = ["Default"]
@@ -214,18 +193,22 @@ class LaunchManager:
 
         if source == "Steam":
             # Try to launch steam directly with applaunch parameter first
-            steam_path = shutil.which("steam")
+            steam_cmd = config_manager.get_steam_cmd()
+            steam_path = shutil.which(steam_cmd)
             if steam_path:
                 subprocess.Popen([steam_path, "-applaunch", GD_APP_ID])
             else:
-                # Fallback to xdg-open with steam:// protocol
-                subprocess.Popen(["xdg-open", f"steam://rungameid/{GD_APP_ID}"])
+                # Fallback to protocol
+                open_cmd = config_manager.get_open_cmd()
+                if sys.platform == "win32":
+                    os.startfile(f"steam://rungameid/{GD_APP_ID}")
+                else:
+                    subprocess.Popen([open_cmd, f"steam://rungameid/{GD_APP_ID}"])
         else:
             # Local launch
             exe_path = gd_path / "GeometryDash.exe"
-            # We probably need wine/proton to run it on linux
-            # For now let's try just running it, but usually wine is needed.
-            # Assuming user has wine installed or we use a specific runner.
-            env = os.environ.copy()
-            # If steam_appid.txt exists, it helps
-            subprocess.Popen(["wine", str(exe_path)], cwd=str(gd_path), env=env)
+            if sys.platform == "win32":
+                subprocess.Popen([str(exe_path)], cwd=str(gd_path))
+            else:
+                wine_cmd = config_manager.get_wine_cmd()
+                subprocess.Popen([wine_cmd, str(exe_path)], cwd=str(gd_path))

@@ -2,6 +2,7 @@
 import sys
 import json
 import subprocess
+import os
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
@@ -10,6 +11,7 @@ from PySide6.QtCore import QObject, Slot, QAbstractListModel, Property, Signal
 from launch.manager import LaunchManager, InstanceModel
 from geode.manager import GeodeManager
 from launch.downloader import Downloader
+from config.manager import config_manager
 
 class LauncherBridge(QObject):
     usernameChanged = Signal()
@@ -17,18 +19,19 @@ class LauncherBridge(QObject):
     rememberMeChanged = Signal()
     
     configChanged = Signal()
+    geodeStatusChanged = Signal(str)
 
     def __init__(self):
         super().__init__()
         self._instance_model = InstanceModel()
         self._launch_manager = LaunchManager(self._instance_model)
-        self._geode_manager = GeodeManager(self._instance_model)
+        self._geode_manager = GeodeManager(self._instance_model, self)
         self._downloader = Downloader()
           
         self._config_path = Path("config.json")
         self._username = ""
         self._remember_me = False
-        self._download_path = str(Path("instances").resolve())
+        self._download_path = str(config_manager.get_default_instances_dir().resolve())
         self._load_config()
 
         # Initial detection
@@ -41,7 +44,8 @@ class LauncherBridge(QObject):
                     data = json.load(f)
                     self._username = data.get("username", "")
                     self._remember_me = data.get("remember_me", False)
-                    self._download_path = data.get("download_path", str(Path("instances").resolve()))
+                    # Use existing if in config, otherwise default from config_manager
+                    self._download_path = data.get("download_path", self._download_path)
             except Exception:
                 pass
 
@@ -136,6 +140,18 @@ class LauncherBridge(QObject):
             return
         self._geode_manager.rename_profile(index, old_name, new_name)
 
+    @Slot(int, bool)
+    def toggle_geode(self, index, enabled):
+        if not self._is_steam_valid(index):
+            return
+        self._geode_manager.toggle_geode(index, enabled)
+
+    @Slot(int)
+    def install_geode(self, index):
+        if not self._is_steam_valid(index):
+            return
+        self._geode_manager.install_geode(index)
+
     @Slot(int, result="QVariantList")
     def get_profiles(self, index):
         if 0 <= index < self._instance_model.rowCount():
@@ -179,7 +195,11 @@ class LauncherBridge(QObject):
         if 0 <= index < self._instance_model.rowCount():
             path = self._instance_model._instances[index].get("path", "")
             if path:
-                subprocess.Popen(["xdg-open", path])
+                if sys.platform == "win32":
+                    os.startfile(path)
+                else:
+                    open_cmd = config_manager.get_open_cmd()
+                    subprocess.Popen([open_cmd, path])
 
     @Slot(int)
     def delete_instance(self, index):

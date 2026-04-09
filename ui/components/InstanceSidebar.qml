@@ -42,9 +42,12 @@ Rectangle {
             font.pixelSize: 11
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
+            visible: root.currentIndex !== -1 && 
+                     root.ownershipStatus !== "Owned" && 
+                     root.ownershipStatus !== "Family Shared" && 
+                     root.ownershipStatus !== "N/A (Local)"
             color: {
                 var status = root.ownershipStatus
-                if (status === "Owned" || status === "Family Shared" || status === "N/A (Local)") return "green"
                 if (status.startsWith("Unknown")) return "orange"
                 return "red"
             }

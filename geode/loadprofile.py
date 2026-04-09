@@ -1,6 +1,8 @@
 import os
 import shutil
+import sys
 from pathlib import Path
+from config.manager import config_manager
 
 GEODE_DIR = "geode"
 PROFILES_DIR = "profiles"
@@ -17,24 +19,22 @@ def get_geode_data_dir(gd_path: Path):
     if gd_geode.exists() and gd_geode.is_dir():
         return gd_geode
     
-    # Check for Steam/Proton compatdata path
-    steam_path = gd_path
-    while steam_path.parent != steam_path:
-        if str(steam_path.name) == "steamapps":
-            compat = steam_path.parent / "compatdata" / GD_APP_ID / "pfx" / "drive_c" / "ProgramData" / "Geode"
-            if compat.exists():
-                return compat
-            break
-        steam_path = steam_path.parent
+    # Check for Steam/Proton compatdata path (Linux only)
+    if sys.platform != "win32":
+        steam_path = gd_path
+        while steam_path.parent != steam_path:
+            if str(steam_path.name) == "steamapps":
+                compat = steam_path.parent / "compatdata" / GD_APP_ID / "pfx" / "drive_c" / "ProgramData" / "Geode"
+                if compat.exists():
+                    return compat
+                break
+            steam_path = steam_path.parent
     
-    # Check common Linux paths
-    local_share = Path.home() / ".local/share/Geode"
-    if local_share.exists():
-        return local_share
-    
-    config_geode = Path.home() / ".config/geode"
-    if config_geode.exists():
-        return config_geode
+    # Check configured/common paths
+    common_paths = config_manager.get_geode_data_dirs()
+    for p in common_paths:
+        if p.exists():
+            return p
     
     return None
 
@@ -76,7 +76,12 @@ def activate_profile(gd_path: str, profile_name: str):
 
         # Create symlink
         try:
-            dst.symlink_to(src.resolve(), target_is_directory=True)
+            if sys.platform == "win32":
+                # On Windows, we need to handle junction vs symlink or just use symlink_to with privilege
+                # Usually junctions are safer if not running as admin, but target_is_directory=True helps
+                dst.symlink_to(src.resolve(), target_is_directory=True)
+            else:
+                dst.symlink_to(src.resolve(), target_is_directory=True)
             print(f"Symlinked {dst} -> {src}")
         except Exception as e:
             print(f"Failed to symlink {dst}: {e}")

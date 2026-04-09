@@ -1,0 +1,32 @@
+{
+    "linux": {
+        "steam_roots": [
+            "~/.steam/steam",
+            "~/.steam/debian-installation",
+            "~/.local/share/Steam",
+            "~/.var/app/com.valvesoftware.Steam/.local/share/Steam",
+            "~/.var/app/com.valvesoftware.Steam/.steam/steam"
+        ],
+        "geode_data_dirs": [
+            "~/.local/share/Geode",
+            "~/.config/geode"
+        ],
+        "default_instances_dir": "instances",
+        "steam_cmd": "steam",
+        "open_cmd": "xdg-open",
+        "wine_cmd": "wine"
+    },
+    "windows": {
+        "steam_roots": [
+            "C:/Program Files (x86)/Steam",
+            "C:/Program Files/Steam"
+        ],
+        "geode_data_dirs": [
+            "%LOCALAPPDATA%/Geode"
+        ],
+        "default_instances_dir": "instances",
+        "steam_cmd": "steam",
+        "open_cmd": "explorer",
+        "wine_cmd": ""
+    }
+}

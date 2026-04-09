@@ -110,6 +110,13 @@ ApplicationWindow {
         onProfileSelected: (name) => window.selectedProfile = name
         onProfileCreated: (name) => launcher ? launcher.create_geode_profile(instanceIndex, name) : null
         onProfileDeleted: (name) => launcher ? launcher.delete_geode_profile(instanceIndex, name) : null
+        onGeodeToggled: (enabled) => launcher ? launcher.toggle_geode(instanceIndex, enabled) : null
+        onInstallGeode: () => launcher ? launcher.install_geode(instanceIndex) : null
+
+        Connections {
+            target: launcher || null
+            function onGeodeStatusChanged(msg) { optionsDialog.statusLabel.text = msg }
+        }
     }
 
     SettingsDialog {
