@@ -6,8 +6,18 @@ from pathlib import Path
 class ConfigManager:
     def __init__(self):
         self.platform = "windows" if sys.platform == "win32" else "linux"
-        self.config_path = Path(__file__).parent / "paths.json"
+        
+        # Handle frozen (bundled) paths for PyInstaller
+        if hasattr(sys, "_MEIPASS"):
+            self.base_path = Path(sys._MEIPASS)
+        else:
+            self.base_path = Path(__file__).parent.parent
+            
+        self.config_path = self.base_path / "config" / "paths.json"
         self.paths = self._load_paths()
+
+    def get_qml_path(self, filename="main.qml"):
+        return self.base_path / filename
 
     def _load_paths(self):
         try:

@@ -225,7 +225,7 @@ if __name__ == "__main__":
     # We should also expose the downloader to QML for signals
     engine.rootContext().setContextProperty("downloader", bridge._downloader)
         
-    qml_file = Path(__file__).resolve().parent / "main.qml"
+    qml_file = config_manager.get_qml_path("main.qml")
     engine.load(qml_file)
     
     if not engine.rootObjects():
