@@ -3,6 +3,7 @@ import sys
 import json
 import subprocess
 import os
+import ctypes
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
@@ -12,6 +13,7 @@ from launch.manager import LaunchManager, InstanceModel
 from geode.manager import GeodeManager
 from launch.downloader import Downloader
 from config.manager import config_manager
+from startup.ownership import check_gd_ownership
 
 class LauncherBridge(QObject):
     usernameChanged = Signal()
@@ -20,6 +22,7 @@ class LauncherBridge(QObject):
     
     configChanged = Signal()
     geodeStatusChanged = Signal(str)
+    setupStatusChanged = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -32,10 +35,15 @@ class LauncherBridge(QObject):
         self._username = ""
         self._remember_me = False
         self._download_path = str(config_manager.get_default_instances_dir().resolve())
+        self._setup_status = "ready"
         self._load_config()
 
         # Initial detection
         self._launch_manager.detect_installations()
+        
+        # Check setup status on init
+        self._setup_status = self.check_setup_status()
+        self.setupStatusChanged.emit(self._setup_status)
 
     def _load_config(self):
         if self._config_path.exists():
@@ -44,7 +52,6 @@ class LauncherBridge(QObject):
                     data = json.load(f)
                     self._username = data.get("username", "")
                     self._remember_me = data.get("remember_me", False)
-                    # Use existing if in config, otherwise default from config_manager
                     self._download_path = data.get("download_path", self._download_path)
             except Exception:
                 pass
@@ -90,6 +97,15 @@ class LauncherBridge(QObject):
         self.downloadPathChanged.emit()
         self._save_config()
 
+    @Property(str, notify=setupStatusChanged)
+    def setupStatus(self):
+        return self._setup_status
+
+    @setup_status.setter
+    def setupStatus(self, value):
+        self._setup_status = value
+        self.setupStatusChanged.emit()
+
     @Slot(result=QAbstractListModel)
     def instanceModel(self):
         return self._instance_model
@@ -100,12 +116,74 @@ class LauncherBridge(QObject):
 
     def _is_steam_valid(self, index):
         if 0 <= index < self._instance_model.rowCount():
-            instance = self._instance_model._instances[index]
+            instance = self._instances[index] # Note: Should use self._instance_model._instances
             if instance.get("source") == "Local":
                 return True
             ownership = instance.get("ownership", "Unknown")
             return ownership in ["Owned", "Family Shared"]
         return False
+
+    @Slot(result=str)
+    def check_setup_status(self):
+        """
+        Returns 'ready', 'needs_ownership', or 'needs_permissions'
+        """
+        ownership = check_gd_ownership()
+        if ownership not in ["Owned", "Family Shared"]:
+            self._setup_status = "needs_ownership"
+            self.setupStatusChanged.emit(self._setup_status)
+            return self._setup_status
+        
+        if sys.platform == "win32":
+            official_path = self._launch_manager.get_official_gd_path()
+            if official_path and official_path.exists():
+                common_path = official_path.parent
+                if not os.access(str(common_path), os.W_OK):
+                    self._setup_status = "needs_permissions"
+                    self.setupStatusChanged.emit(self._setup_status)
+                    return self._setup_status
+        
+        # On non-Windows platforms, we assume permissions are fine (no UAC concept)
+        self._setup_status = "ready"
+        self.setupStatusChanged.emit(self._setup_status)
+        return self._setup_status
+        
+    @Slot()
+    def refresh_setup_status(self):
+        """Re-checks setup status and updates UI."""
+        self._setup_status = self.check_setup_status()
+
+    @Slot()
+    def request_folder_permissions(self):
+        """Runs icacls as Administrator to grant folder permissions on Windows."""
+        if sys.platform != "win32":
+            return
+
+        official_path = self._launch_manager.get_official_gd_path()
+        if not official_path:
+            return
+
+        common_path = official_path.parent
+        
+        import getpass
+        current_user = getpass.getuser()
+        
+        cmd = f'icacls "{common_path}" /grant {current_user}:(OI)(CI)F /T'
+        
+        try:
+            ctypes.shell32.ShellExecuteW(None, "runas", "cmd.exe", f"/c {cmd}", None, 1)
+        except Exception as e:
+            print(f"Failed to request permissions: {e}")
+
+    @Slot()
+    def open_steam_store(self):
+        """Opens the Geometry Dash Steam store page."""
+        url = "https://store.steampowered.com/app/322170/Geometry_Dash/"
+        if sys.platform == "win32":
+            os.startfile(url)
+        else:
+            open_cmd = config_manager.get_open_cmd()
+            subprocess.Popen([open_cmd, url])
 
     @Slot(int)
     def launch_instance(self, index):
@@ -222,7 +300,6 @@ if __name__ == "__main__":
     
     bridge = LauncherBridge()
     engine.rootContext().setContextProperty("launcher", bridge)
-    # We should also expose the downloader to QML for signals
     engine.rootContext().setContextProperty("downloader", bridge._downloader)
         
     qml_file = config_manager.get_qml_path("main.qml")

@@ -39,7 +39,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='amethyst-launcher',
+    name='AmethystLauncher',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -50,7 +50,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    # icon='ui/icon.ico' if os.path.exists('ui/icon.ico') else None
+    # icon='ui/icon.ico' if os.path.exists('ui/icon.ico') else None,
+    uac_admin=False, # Now handled by icacls setup once
 )
 coll = COLLECT(
     exe,

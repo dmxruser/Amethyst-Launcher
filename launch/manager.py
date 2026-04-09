@@ -90,6 +90,35 @@ class LaunchManager:
     def __init__(self, model: InstanceModel):
         self.model = model
 
+    def get_official_gd_path(self):
+        """Finds the actual Steam installation folder for Geometry Dash."""
+        steam_root_paths = config_manager.get_steam_roots()
+        processed_libraries = set()
+
+        # 1. Check libraryfolders.vdf
+        for root in steam_root_paths:
+            vdf_path = root / "steamapps/libraryfolders.vdf"
+            if vdf_path.exists():
+                try:
+                    with open(vdf_path, "r") as f:
+                        content = f.read()
+                    paths = re.findall(r'"path"\s*"([^"]+)"', content)
+                    for path_str in paths:
+                        lib_path = Path(path_str)
+                        gd_path = lib_path / "steamapps/common/Geometry Dash"
+                        if gd_path.exists():
+                            return gd_path
+                except Exception:
+                    pass
+        
+        # 2. Check default steamapps/common
+        for root in steam_root_paths:
+            gd_path = root / "steamapps/common/Geometry Dash"
+            if gd_path.exists():
+                return gd_path
+                
+        return None
+
     def detect_installations(self):
         self.model.clear()
         
@@ -182,6 +211,9 @@ class LaunchManager:
         return found
 
     def launch(self, index, profile=None):
+        import threading
+        import time
+
         instance = self.model._instances[index]
         gd_path = Path(instance["path"])
         source = instance.get("source", "Steam")
@@ -191,24 +223,129 @@ class LaunchManager:
         else:
             deactivate_profile(str(gd_path))
 
-        if source == "Steam":
-            # Try to launch steam directly with applaunch parameter first
-            steam_cmd = config_manager.get_steam_cmd()
-            steam_path = shutil.which(steam_cmd)
-            if steam_path:
-                subprocess.Popen([steam_path, "-applaunch", GD_APP_ID])
-            else:
-                # Fallback to protocol
-                open_cmd = config_manager.get_open_cmd()
-                if sys.platform == "win32":
-                    os.startfile(f"steam://rungameid/{GD_APP_ID}")
+        def monitor_and_restore(official_path: Path, original_backup: Path):
+            """Monitors for the game process and restores the official folder when it exits."""
+            try:
+                # Wait for process to start (up to 30s)
+                found = False
+                for _ in range(60):
+                    if self._is_game_running():
+                        found = True
+                        break
+                    time.sleep(0.5)
+                
+                if found:
+                    # Wait for process to exit
+                    while self._is_game_running():
+                        time.sleep(1)
                 else:
-                    subprocess.Popen([open_cmd, f"steam://rungameid/{GD_APP_ID}"])
+                    print("Game process never detected. Restoring anyway.")
+            finally:
+                # Cleanup link/junction and restore
+                if official_path.exists() or (sys.platform == "win32" and self._is_junction(official_path)):
+                    if sys.platform == "win32":
+                        # For junctions on Windows, rmdir is the safe way to remove the link without deleting content
+                        try:
+                            subprocess.run(['cmd', '/c', 'rmdir', str(official_path)], check=True)
+                        except:
+                            if official_path.is_symlink(): os.unlink(official_path)
+                    else:
+                        os.unlink(official_path)
+                
+                if original_backup.exists():
+                    original_backup.rename(official_path)
+                print("Restored official Geometry Dash installation.")
+
+        if source == "Steam":
+            # Direct Steam launch
+            self._trigger_steam_launch()
         else:
-            # Local launch
-            exe_path = gd_path / "GeometryDash.exe"
+            # Local launch via Swap-and-Steam
+            official_path = self.get_official_gd_path()
+            if not official_path:
+                print("Error: Could not find official Steam installation of Geometry Dash.")
+                return
+
+            if official_path.resolve() == gd_path.resolve():
+                self._trigger_steam_launch()
+                return
+
+            try:
+                # 0. Ensure steam_appid.txt exists in the local instance (Legit secondary DRM safeguard)
+                appid_file = gd_path / "steam_appid.txt"
+                if not appid_file.exists():
+                    with open(appid_file, "w") as f:
+                        f.write(GD_APP_ID)
+
+                # 1. Backup official
+                original_backup = official_path.parent / (official_path.name + ".original")
+                if not original_backup.exists():
+                    official_path.rename(original_backup)
+                else:
+                    # Backup already exists, official_path might already be a link or missing
+                    if official_path.exists():
+                        # Something is wrong, let's remove the mystery file/link to make room
+                        if sys.platform == "win32" and self._is_junction(official_path):
+                            subprocess.run(['cmd', '/c', 'rmdir', str(official_path)], check=True)
+                        else:
+                            if official_path.is_dir() and not official_path.is_symlink():
+                                # This is a real dir, we shouldn't delete it! 
+                                # Renaming to a timestamped backup instead.
+                                official_path.rename(official_path.parent / f"{official_path.name}.{int(time.time())}.bak")
+                            else:
+                                os.unlink(official_path)
+
+                # 2. Create Link (Symlink on Linux, Junction on Windows)
+                if sys.platform == "win32":
+                    # mklink /J works without admin rights and is very stable for this
+                    subprocess.run(['cmd', '/c', 'mklink', '/J', str(official_path), str(gd_path)], check=True)
+                else:
+                    os.symlink(gd_path, official_path)
+
+                # 3. Launch via Steam
+                self._trigger_steam_launch()
+
+                # 4. Start restoration monitor
+                threading.Thread(target=monitor_and_restore, args=(official_path, original_backup), daemon=True).start()
+
+            except Exception as e:
+                print(f"Failed to perform symlink swap: {e}")
+                # Emergency restore if possible
+                if 'original_backup' in locals() and original_backup.exists() and not official_path.exists():
+                    try:
+                        original_backup.rename(official_path)
+                    except: pass
+
+    def _trigger_steam_launch(self):
+        steam_cmd = config_manager.get_steam_cmd()
+        steam_path = shutil.which(steam_cmd)
+        if steam_path:
+            subprocess.Popen([steam_path, "-applaunch", GD_APP_ID])
+        else:
+            open_cmd = config_manager.get_open_cmd()
             if sys.platform == "win32":
-                subprocess.Popen([str(exe_path)], cwd=str(gd_path))
+                os.startfile(f"steam://rungameid/{GD_APP_ID}")
             else:
-                wine_cmd = config_manager.get_wine_cmd()
-                subprocess.Popen([wine_cmd, str(exe_path)], cwd=str(gd_path))
+                subprocess.Popen([open_cmd, f"steam://rungameid/{GD_APP_ID}"])
+
+    def _is_game_running(self):
+        """Checks if GeometryDash.exe is currently running."""
+        try:
+            if sys.platform == "win32":
+                output = subprocess.check_output(['tasklist', '/FI', 'IMAGENAME eq GeometryDash.exe'], text=True)
+                return "GeometryDash.exe" in output
+            else:
+                output = subprocess.check_output(['pgrep', '-f', 'GeometryDash'], text=True)
+                return len(output.strip()) > 0
+        except:
+            return False
+
+    def _is_junction(self, path: Path):
+        """Specifically checks if a path is a Windows Directory Junction."""
+        if sys.platform != "win32": return False
+        try:
+            # Junctions are 'd' type in dir but have <JUNCTION> in output
+            output = subprocess.check_output(['cmd', '/c', 'dir', str(path.parent)], text=True)
+            return f"<JUNCTION>     {path.name}" in output
+        except:
+            return False

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import "ui/dialogs"
+import "ui/dialogs/SetupWizard.qml"
 import "ui/components"
 
 ApplicationWindow {
@@ -12,6 +13,13 @@ ApplicationWindow {
     visible: true
     title: qsTr("Amethyst Launcher")
     color: palette.window
+    
+    Component.onCompleted: {
+        if (launcher && launcher.setupStatus !== "ready") {
+            setupWizard.setupStatus = launcher.setupStatus
+            setupWizard.open()
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -130,6 +138,22 @@ ApplicationWindow {
             if (launcher) {
                 launcher.delete_instance(instanceGrid.currentIndex)
                 instanceGrid.currentIndex = -1
+            }
+        }
+    }
+    
+    SetupWizard {
+        id: setupWizard
+        
+        Connections {
+            target: launcher
+            function onSetupStatusChanged(status) {
+                if (status !== "ready") {
+                    setupWizard.setupStatus = status
+                    setupWizard.open()
+                } else {
+                    setupWizard.close()
+                }
             }
         }
     }

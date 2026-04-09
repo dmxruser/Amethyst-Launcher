@@ -6,6 +6,7 @@ Dialog {
     id: root
 
     property alias statusText: downloadStatusLabel.text
+    property alias needsSetup: setupWarning.visible
 
     title: qsTr("Download New Instance")
     x: (window.width - (width || 400)) / 2
@@ -13,10 +14,21 @@ Dialog {
     modal: true
     standardButtons: DialogButtonBox.Cancel
     width: 400
+    
+    onVisibleChanged: {
+        if (visible && launcher) {
+            var status = launcher.check_setup_status()
+            root.needsSetup = (status !== "ready")
+            if (status === "needs_ownership") {
+                statusText = "You need to own Geometry Dash on Steam first."
+            } else if (status === "needs_permissions") {
+                statusText = "Please complete setup first."
+            }
+        }
+    }
 
     function startDownload(name, appId, depotId, manifestId) {
-        if (launcher) {
-            // Updated to remove redundant credentials
+        if (launcher && launcher.check_setup_status() === "ready") {
             launcher.start_download("", "", name, appId, depotId, manifestId, "")
         }
     }
@@ -25,6 +37,16 @@ Dialog {
         anchors.fill: parent
         anchors.margins: 15
         spacing: 10
+
+        Label {
+            id: setupWarning
+            visible: false
+            text: qsTr("<b>Setup Required:</b> Complete the setup wizard before downloading.")
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+            font.pixelSize: 11
+            color: "#ff6600"
+        }
 
         Label {
             text: qsTr("<b>Steam Client Required:</b> This launcher uses your installed Steam client's console to fetch official game files. You must be logged into a Steam account that owns Geometry Dash.")
@@ -62,7 +84,7 @@ Dialog {
         Button {
             text: qsTr("Start Download in Steam")
             Layout.fillWidth: true
-            enabled: instanceName.text.length > 0
+            enabled: instanceName.text.length > 0 && !root.needsSetup
             onClicked: {
                 var ver = versionSelect.model[versionSelect.currentIndex]
                 root.startDownload(
