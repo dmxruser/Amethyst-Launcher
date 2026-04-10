@@ -9,6 +9,7 @@ from pathlib import Path
 from PySide6.QtCore import QObject, Slot
 from geode.loadprofile import get_geode_data_dir, PROFILES_DIR
 
+
 # Just a lot of code for making profiles
 class GeodeManager:
     def __init__(self, model, bridge=None):
@@ -117,6 +118,7 @@ class GeodeManager:
                         self.bridge.geodeStatusChanged.emit(msg)
 
                 set_status("Fetching latest Geode release...")
+                self._emit_gd_message(set_status)
                 api_url = "https://api.github.com/repos/geode-sdk/geode/releases/latest"
                 # Use a specific user agent as GitHub API requires it
                 headers = {"User-Agent": "Amethyst-Launcher"}
