@@ -48,7 +48,7 @@ begin
     'Verifying you actually own the game...',
     'Downloading 0.1% of RobTop''s tears...'
   ];
-  Randomize;
+  InitializeRandom;
   Result := True;
 end;
 
