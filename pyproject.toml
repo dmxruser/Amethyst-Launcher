@@ -2,4 +2,4 @@
 name = "amethyst-launcher"
 
 [tool.pyside6-project]
-files = ["main.py", "main.qml"]
+files = ["main.py", "main.qml", "launch/*.py", "geode/*.py", "config/*.py", "startup/*.py", "ui/**/*.qml"]
