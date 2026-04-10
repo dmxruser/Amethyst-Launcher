@@ -2,4 +2,23 @@
 name = "amethyst-launcher"
 
 [tool.pyside6-project]
-files = ["main.py", "main.qml", "launch/*.py", "geode/*.py", "config/*.py", "startup/*.py", "ui/**/*.qml"]
+files = [
+    "main.py",
+    "main.qml",
+    "launch/__init__.py",
+    "launch/downloader.py",
+    "launch/manager.py",
+    "geode/__init__.py",
+    "geode/loadprofile.py",
+    "geode/manager.py",
+    "config/manager.py",
+    "startup/__init__.py",
+    "startup/ownership.py",
+    "ui/dialogs/DeleteConfirmDialog.qml",
+    "ui/dialogs/DownloadDialog.qml",
+    "ui/dialogs/InstanceOptionsDialog.qml",
+    "ui/dialogs/SettingsDialog.qml",
+    "ui/dialogs/SetupWizard.qml",
+    "ui/components/InstanceGrid.qml",
+    "ui/components/InstanceSidebar.qml"
+]
