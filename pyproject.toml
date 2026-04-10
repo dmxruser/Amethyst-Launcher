@@ -14,11 +14,5 @@ files = [
     "config/manager.py",
     "startup/__init__.py",
     "startup/ownership.py",
-    "ui/dialogs/DeleteConfirmDialog.qml",
-    "ui/dialogs/DownloadDialog.qml",
-    "ui/dialogs/InstanceOptionsDialog.qml",
-    "ui/dialogs/SettingsDialog.qml",
-    "ui/dialogs/SetupWizard.qml",
-    "ui/components/InstanceGrid.qml",
-    "ui/components/InstanceSidebar.qml"
+    "config/paths.json"
 ]
