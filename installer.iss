@@ -56,8 +56,8 @@ begin
   if CurStep = ssInstall then
   begin
     MsgIndex := Random(Length(GD_Messages));
-    WizardForm.StatusLabel2.Font.Style := [fsItalic];
-    WizardForm.StatusLabel2.Caption := GD_Messages[MsgIndex];
+    WizardForm.StatusLabel.Font.Style := [fsItalic];
+    WizardForm.StatusLabel.Caption := GD_Messages[MsgIndex];
   end;
 end;
 
