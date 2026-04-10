@@ -7,6 +7,7 @@ Dialog {
 
     property alias statusText: downloadStatusLabel.text
     property alias needsSetup: setupWarning.visible
+    property var launcher
 
     title: qsTr("Download New Instance")
     x: (window.width - (width || 400)) / 2
@@ -29,7 +30,7 @@ Dialog {
 
     function startDownload(name, appId, depotId, manifestId) {
         if (launcher && launcher.check_setup_status() === "ready") {
-            launcher.start_download("", "", name, appId, depotId, manifestId, "")
+            launcher.start_download("", "", name, appId, depotId, manifestId, null)
         }
     }
 

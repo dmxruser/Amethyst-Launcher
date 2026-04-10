@@ -99,12 +99,13 @@ ApplicationWindow {
 
     DownloadDialog {
         id: downloadDialog
+        launcher: launcher
         
         Connections {
-            target: downloader || null
+            target: launcher._downloader
             function onOutput_received(line) { downloadDialog.statusText = line }
             function onFinished(success, msg) {
-                downloadStatusLabel.text = msg
+                downloadDialog.statusText = msg
                 if (success && launcher) {
                     launcher.detect_installations()
                 }

@@ -118,7 +118,6 @@ class GeodeManager:
                         self.bridge.geodeStatusChanged.emit(msg)
 
                 set_status("Fetching latest Geode release...")
-                self._emit_gd_message(set_status)
                 api_url = "https://api.github.com/repos/geode-sdk/geode/releases/latest"
                 # Use a specific user agent as GitHub API requires it
                 headers = {"User-Agent": "Amethyst-Launcher"}
