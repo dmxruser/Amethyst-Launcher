@@ -48,7 +48,6 @@ begin
     'Verifying you actually own the game...',
     'Downloading 0.1% of RobTop''s tears...'
   ];
-  InitializeRandom;
   Result := True;
 end;
 
@@ -56,7 +55,7 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssInstall then
   begin
-    MsgIndex := Random(High(GD_Messages) + 1);
+    MsgIndex := Random(Length(GD_Messages));
     WizardForm.StatusLabel2.Font.Style := [fsItalic];
     WizardForm.StatusLabel2.Caption := GD_Messages[MsgIndex];
   end;
