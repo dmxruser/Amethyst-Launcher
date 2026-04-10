@@ -7,7 +7,7 @@ import ctypes
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtCore import QObject, Slot, QAbstractListModel, Property, Signal
+from PySide6.QtCore import QObject, Slot, QAbstractListModel, Property, Signal, QModelIndex
 
 from launch.manager import LaunchManager, InstanceModel
 from geode.manager import GeodeManager
@@ -101,7 +101,7 @@ class LauncherBridge(QObject):
     def setupStatus(self):
         return self._setup_status
 
-    @setup_status.setter
+    @setupStatus.setter
     def setupStatus(self, value):
         self._setup_status = value
         self.setupStatusChanged.emit()
@@ -116,7 +116,7 @@ class LauncherBridge(QObject):
 
     def _is_steam_valid(self, index):
         if 0 <= index < self._instance_model.rowCount():
-            instance = self._instances[index] # Note: Should use self._instance_model._instances
+            instance = self._instance_model._instances[index]
             if instance.get("source") == "Local":
                 return True
             ownership = instance.get("ownership", "Unknown")
@@ -190,7 +190,7 @@ class LauncherBridge(QObject):
         if not self._is_steam_valid(index):
             print(f"Blocking launch for instance {index}: Invalid ownership")
             return
-        self._launch_manager.launch(index)
+        self._launch_manager.launch(index, None)
 
     @Slot(int, str)
     def launch_instance_with_profile(self, index, profile):
@@ -289,8 +289,9 @@ class LauncherBridge(QObject):
                     import shutil
                     try:
                         shutil.rmtree(path)
+                        self._instance_model.beginRemoveRows(QModelIndex(), index, index)
                         self._instance_model._instances.pop(index)
-                        self._instance_model.layoutChanged.emit()
+                        self._instance_model.endRemoveRows()
                     except Exception as e:
                         print(f"Failed to delete instance: {e}")
 
