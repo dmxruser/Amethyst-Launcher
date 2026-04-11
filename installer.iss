@@ -6,11 +6,10 @@ DefaultDirName={autopf}\Amethyst Launcher
 DefaultGroupName=Amethyst Launcher
 OutputDir=.
 OutputBaseFilename=AmethystLauncher-Setup
-Compression=lzma
+Compression=lzma2
 SolidCompression=yes
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
-WizardImageFile=assets\installerside.png
 
 [Messages]
 SetupAppRunningError=Close Geometry Dash first! You can't install while the game is running.
@@ -52,6 +51,12 @@ begin
   Result := True;
 end;
 
+procedure InitializeWizard();
+begin
+  ExtractTemporaryFile('installerside.png');
+  WizardForm.WizardBitmapImage.Bitmap.LoadFromFile(ExpandConstant('{tmp}\installerside.png'));
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssInstall then
@@ -63,6 +68,7 @@ begin
 end;
 
 [Files]
+Source: "assets\installerside.png"; Flags: dontcopy
 Source: "dist\AmethystLauncher\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 
 [Icons]

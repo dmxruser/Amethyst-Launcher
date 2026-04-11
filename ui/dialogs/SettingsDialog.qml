@@ -5,6 +5,11 @@ import QtQuick.Layouts
 Dialog {
     id: root
     
+    SystemPalette {
+        id: systemPalette
+        colorGroup: SystemPalette.Active
+    }
+    
     title: qsTr("Settings")
     x: (window.width - (width || 450)) / 2
     y: (window.height - (height || 400)) / 2
@@ -72,7 +77,7 @@ Dialog {
                 Label {
                     text: qsTr("A Geometry Dash launcher with Geode support")
                     font.pixelSize: 11
-                    color: palette.text
+                    color: systemPalette.text
                 }
             }
         }

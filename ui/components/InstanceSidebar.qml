@@ -4,7 +4,12 @@ import QtQuick.Layouts
 
 Rectangle {
     id: root
-    color: palette.window
+    color: systemPalette.window
+    
+    SystemPalette {
+        id: systemPalette
+        colorGroup: SystemPalette.Active
+    }
     
     property int currentIndex: -1
     property string instanceName: ""
@@ -53,7 +58,7 @@ Rectangle {
             }
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: palette.mid }
+        Rectangle { Layout.fillWidth: true; height: 1; color: systemPalette.mid }
 
         Button {
             text: qsTr("Launch")

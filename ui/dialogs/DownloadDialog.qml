@@ -9,6 +9,11 @@ Dialog {
     property alias needsSetup: setupWarning.visible
     property var launcher
 
+    SystemPalette {
+        id: systemPalette
+        colorGroup: SystemPalette.Active
+    }
+
     title: qsTr("Download New Instance")
     x: (window.width - (width || 400)) / 2
     y: (window.height - (height || 450)) / 2
@@ -54,10 +59,10 @@ Dialog {
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
             font.pixelSize: 11
-            color: palette.text
+            color: systemPalette.text
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: palette.mid }
+        Rectangle { Layout.fillWidth: true; height: 1; color: systemPalette.mid }
 
         TextField {
             id: instanceName
@@ -103,7 +108,7 @@ Dialog {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             font.pixelSize: 10
-            color: palette.mid
+            color: systemPalette.mid
         }
     }
 }

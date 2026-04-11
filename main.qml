@@ -11,7 +11,12 @@ ApplicationWindow {
     height: 600
     visible: true
     title: qsTr("Amethyst Launcher")
-    color: palette.window
+    color: systemPalette.window
+
+    SystemPalette {
+        id: systemPalette
+        colorGroup: SystemPalette.Active
+    }
     
     Component.onCompleted: {
         if (launcher && launcher.setupStatus !== "ready") {

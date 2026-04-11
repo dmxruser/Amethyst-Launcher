@@ -18,6 +18,11 @@ Dialog {
     signal instanceRenamed(string newName)
     signal installGeode()
     
+    SystemPalette {
+        id: systemPalette
+        colorGroup: SystemPalette.Active
+    }
+    
     title: qsTr("Instance Options")
     x: (window.width - width) / 2
     y: (window.height - height) / 2
@@ -60,7 +65,7 @@ Dialog {
             visible: text !== ""
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
-            color: palette.highlight
+            color: systemPalette.highlight
             font.pixelSize: 11
         }
 

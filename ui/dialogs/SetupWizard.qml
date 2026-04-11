@@ -8,6 +8,11 @@ Dialog {
     property string setupStatus: "ready"
     property string statusMessage: ""
     
+    SystemPalette {
+        id: systemPalette
+        colorGroup: SystemPalette.Active
+    }
+    
     title: qsTr("Setup Required")
     x: (window.width - (width || 450)) / 2
     y: (window.height - (height || 350)) / 2
@@ -38,13 +43,13 @@ Dialog {
             font.pixelSize: 16
         }
         
-        Rectangle { Layout.fillWidth: true; height: 1; color: palette.mid }
+        Rectangle { Layout.fillWidth: true; height: 1; color: systemPalette.mid }
         
         Label {
             text: root.statusMessage
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
-            color: palette.text
+            color: systemPalette.text
         }
         
         Item { Layout.fillHeight: true }
@@ -60,17 +65,17 @@ Dialog {
             Label {
                 text: qsTr("1. Open the Steam Store page below")
                 font.pixelSize: 11
-                color: palette.text
+                color: systemPalette.text
             }
             Label {
                 text: qsTr("2. Purchase (or activate family share)")
                 font.pixelSize: 11
-                color: palette.text
+                color: systemPalette.text
             }
             Label {
                 text: qsTr("3. Verify ownership in Steam settings")
                 font.pixelSize: 11
-                color: palette.text
+                color: systemPalette.text
             }
             
             Button {
@@ -94,7 +99,7 @@ Dialog {
             Label {
                 text: qsTr("Amethyst needs to modify the Steam game folder to manage instances. This requires a one-time administrator authorization.")
                 font.pixelSize: 11
-                color: palette.text
+                color: systemPalette.text
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
@@ -112,7 +117,7 @@ Dialog {
             Label {
                 text: qsTr("A UAC prompt will appear. Click Yes to grant permissions.")
                 font.pixelSize: 10
-                color: palette.mid
+                color: systemPalette.mid
             }
         }
         

@@ -10,6 +10,11 @@ Item {
     signal instanceSelected(int index)
     signal instanceDoubleClicked(int index)
     
+    SystemPalette {
+        id: systemPalette
+        colorGroup: SystemPalette.Active
+    }
+    
     ScrollView {
         anchors.fill: parent
         contentWidth: availableWidth
@@ -34,7 +39,7 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 4
-                    color: instanceGrid.currentIndex === index ? palette.highlight : "transparent"
+                    color: instanceGrid.currentIndex === index ? systemPalette.highlight : "transparent"
                     radius: 3
 
                     ColumnLayout {
@@ -44,8 +49,8 @@ Item {
                         Rectangle {
                             width: 64
                             height: 64
-                            color: palette.base
-                            border.color: palette.mid
+                            color: systemPalette.base
+                            border.color: systemPalette.mid
                             Layout.alignment: Qt.AlignHCenter
                             radius: 4
                             
@@ -53,7 +58,7 @@ Item {
                                 text: (model && model.source === "Steam") ? "ST" : "LO"
                                 anchors.centerIn: parent
                                 font.pixelSize: 20
-                                color: palette.text
+                                color: systemPalette.text
                             }
                         }
 
@@ -63,7 +68,7 @@ Item {
                             elide: Text.ElideRight
                             width: parent.width - 10
                             horizontalAlignment: Text.AlignHCenter
-                            color: instanceGrid.currentIndex === index ? palette.highlightedText : palette.text
+                            color: instanceGrid.currentIndex === index ? systemPalette.highlightedText : systemPalette.text
                         }
                     }
 
