@@ -297,6 +297,9 @@ class LauncherBridge(QObject):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    # Ensure palette follows system theme (dark/light mode)
+    from PySide6.QtGui import QPalette
+    app.setPalette(QPalette())
     engine = QQmlApplicationEngine()
     base_path = str(config_manager.base_path.resolve())
     engine.addImportPath(base_path)
