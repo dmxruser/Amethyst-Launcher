@@ -2,7 +2,7 @@
 [Setup]
 AppName=Amethyst Launcher
 AppVersion=1.0.0
-DefaultDirName={autopf}\Amethyst Launcher
+DefaultDirName={autopf}\Amethyst
 DefaultGroupName=Amethyst Launcher
 OutputDir=.
 OutputBaseFilename=AmethystLauncher-Setup

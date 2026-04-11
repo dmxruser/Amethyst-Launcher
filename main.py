@@ -300,6 +300,11 @@ if __name__ == "__main__":
     # Ensure palette follows system theme (dark/light mode)
     from PySide6.QtGui import QPalette
     app.setPalette(QPalette())
+    
+    # Set Fusion style with system theme for Qt6
+    from PySide6.QtQuickControls2 import QQuickStyle
+    QQuickStyle.setStyle("Fusion")
+    
     engine = QQmlApplicationEngine()
     base_path = str(config_manager.base_path.resolve())
     engine.addImportPath(base_path)
