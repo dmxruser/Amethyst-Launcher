@@ -51,12 +51,6 @@ begin
   Result := True;
 end;
 
-procedure InitializeWizard();
-begin
-  ExtractTemporaryFile('installerside.png');
-  WizardForm.WizardBitmapImage.Bitmap.LoadFromFile(ExpandConstant('{tmp}\installerside.png'));
-end;
-
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssInstall then
@@ -68,7 +62,6 @@ begin
 end;
 
 [Files]
-Source: "assets\installerside.png"; Flags: dontcopy
 Source: "dist\AmethystLauncher\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 
 [Icons]
