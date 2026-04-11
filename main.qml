@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import "ui/dialogs"
-import "ui/dialogs/SetupWizard.qml"
 import "ui/components"
 
 ApplicationWindow {
@@ -100,9 +99,9 @@ ApplicationWindow {
     DownloadDialog {
         id: downloadDialog
         launcher: launcher
-        
+
         Connections {
-            target: launcher._downloader
+            target: downloader
             function onOutput_received(line) { downloadDialog.statusText = line }
             function onFinished(success, msg) {
                 downloadDialog.statusText = msg

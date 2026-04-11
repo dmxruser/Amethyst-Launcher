@@ -12,7 +12,6 @@ Dialog {
     x: (window.width - (width || 450)) / 2
     y: (window.height - (height || 350)) / 2
     modal: true
-    closeOnEsc: false
     width: 450
     
     function checkStatus() {
@@ -40,14 +39,6 @@ Dialog {
         }
         
         Rectangle { Layout.fillWidth: true; height: 1; color: palette.mid }
-        
-        Image {
-            source: "qrc:/images/setup-icon.png"
-            Layout.preferredWidth: 64
-            Layout.preferredHeight: 64
-            Layout.alignment: Qt.AlignCenter
-            visible: false
-        }
         
         Label {
             text: root.statusMessage

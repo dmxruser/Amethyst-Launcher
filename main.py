@@ -298,6 +298,11 @@ class LauncherBridge(QObject):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     engine = QQmlApplicationEngine()
+    base_path = str(config_manager.base_path.resolve())
+    engine.addImportPath(base_path)
+    engine.addImportPath(os.path.join(base_path, "ui"))
+    engine.addImportPath(os.path.join(base_path, "ui/dialogs"))
+    engine.addImportPath(os.path.join(base_path, "ui/components"))
     
     bridge = LauncherBridge()
     engine.rootContext().setContextProperty("launcher", bridge)
