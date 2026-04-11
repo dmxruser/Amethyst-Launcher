@@ -50,7 +50,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    # icon='ui/icon.ico' if os.path.exists('ui/icon.ico') else None,
+    icon='assets/icon.ico' if sys.platform == 'win32' and os.path.exists('assets/icon.ico') else ('assets/icon.png' if os.path.exists('assets/icon.png') else None),
     uac_admin=False, # Now handled by icacls setup once
 )
 coll = COLLECT(

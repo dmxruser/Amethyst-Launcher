@@ -10,6 +10,7 @@ Compression=lzma
 SolidCompression=yes
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
+WizardImageFile=assets\installerside.png
 
 [Messages]
 SetupAppRunningError=Close Geometry Dash first! You can't install while the game is running.
