@@ -60,7 +60,7 @@ Dialog {
         Rectangle {
             id: steamWarningBox
             Layout.fillWidth: true
-            height: steamWarningText.height + 44
+            height: steamWarningText.height + 60
             radius: 6
             color: "#2a2a2a"
             border.width: 1
