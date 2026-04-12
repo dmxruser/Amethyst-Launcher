@@ -1,11 +1,11 @@
 ; installer.iss
 [Setup]
 AppName=Amethyst Launcher
-AppVersion=1.0.0
+AppVersion=0.1.0a
 DefaultDirName={autopf}\Amethyst
 DefaultGroupName=Amethyst Launcher
 OutputDir=.
-OutputBaseFilename=AmethystLauncher-Setup
+OutputBaseFilename=AmethystLauncher-0.1.0a-Setup
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesAllowed=x64

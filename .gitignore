@@ -86,3 +86,20 @@ CMakeLists.txt.user*
 config.json
 bin/
 instances/
+
+# Build outputs
+/build/
+/dist/
+*.deb
+__pycache__/
+.pytest_cache/
+*.egg-info/
+.eggs/
+
+# IDE
+.qtcreator/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

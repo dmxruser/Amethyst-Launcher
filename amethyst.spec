@@ -10,6 +10,7 @@ added_files = [
     ('main.qml', '.'),
     ('ui', 'ui'),
     ('config/paths.json', 'config'),
+    ('assets', 'assets'),
 ]
 
 a = Analysis(
@@ -18,10 +19,6 @@ a = Analysis(
     binaries=[],
     datas=added_files,
     hiddenimports=[
-        'PySide6.QtXml',
-        'PySide6.QtQuick',
-        'PySide6.QtQuickControls2',
-        'PySide6.QtQuickLayouts',
     ],
     hookspath=[],
     hooksconfig={},

@@ -7,6 +7,7 @@ import ctypes
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
+
 from PySide6.QtCore import QObject, Slot, QAbstractListModel, Property, Signal, QModelIndex
 
 from launch.manager import LaunchManager, InstanceModel
@@ -299,12 +300,18 @@ class LauncherBridge(QObject):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     # Ensure palette follows system theme (dark/light mode)
-    from PySide6.QtGui import QPalette
+    from PySide6.QtGui import QPalette, QIcon
     app.setPalette(QPalette())
     
-    # Set Fusion style with system theme for Qt6
-    from PySide6.QtQuickControls2 import QQuickStyle
-    QQuickStyle.setStyle("Fusion")
+    # Set application icon
+    # PyInstaller stores files in _internal folder
+    if getattr(sys, 'frozen', False):
+        base_dir = os.path.join(sys._MEIPASS, "assets")
+    else:
+        base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
+    icon_path = os.path.join(base_dir, "icon.png")
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QIcon(icon_path))
     
     engine = QQmlApplicationEngine()
     base_path = str(config_manager.base_path.resolve())
