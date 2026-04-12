@@ -1,4 +1,7 @@
 # This Python file uses the following encoding: utf-8
+import os
+os.environ["QT_QUICK_CONTROLS_STYLE"] = "Fusion"
+
 import sys
 import json
 import subprocess
@@ -298,13 +301,16 @@ class LauncherBridge(QObject):
                         print(f"Failed to delete instance: {e}")
 
 if __name__ == "__main__":
+    # Set Qt Quick Controls style BEFORE QApplication
+    import os
+    os.environ["QT_QUICK_CONTROLS_STYLE"] = "Fusion"
+    
     app = QApplication(sys.argv)
-    # Set Fusion style (respects system dark/light mode)
     from PySide6.QtWidgets import QStyleFactory
-    app.setStyle(QStyleFactory.create("Fusion"))
-    # Ensure palette follows system theme (dark/light mode)
     from PySide6.QtGui import QPalette, QIcon
-    app.setPalette(QPalette())
+    
+    app.setStyle(QStyleFactory.create("Fusion"))
+    app.setPalette(app.style().standardPalette())
     
     # Set application icon
     # PyInstaller stores files in _internal folder
