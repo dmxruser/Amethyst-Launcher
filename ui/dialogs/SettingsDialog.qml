@@ -72,7 +72,7 @@ Dialog {
             ColumnLayout {
                 anchors.fill: parent
                 Label {
-                    text: qsTr("Amethyst Launcher v1.0.0")
+                    text: qsTr("Amethyst Launcher v0.1.0a")
                 }
                 Label {
                     text: qsTr("A Geometry Dash launcher with Geode support")
