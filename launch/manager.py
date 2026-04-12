@@ -244,9 +244,11 @@ class LaunchManager:
                 # Cleanup link/junction and restore
                 if official_path.exists() or (sys.platform == "win32" and self._is_junction(official_path)):
                     if sys.platform == "win32":
-                        # For junctions on Windows, rmdir is the safe way to remove the link without deleting content
                         try:
-                            subprocess.run(['cmd', '/c', 'rmdir', str(official_path)], check=True)
+                            subprocess.run([
+                                'powershell', '-Command',
+                                f'Start-Process cmd -ArgumentList "/c rmdir \\"{official_path}\\"" -Verb RunAs'
+                            ], check=True)
                         except:
                             if official_path.is_symlink(): os.unlink(official_path)
                     else:
@@ -286,7 +288,10 @@ class LaunchManager:
                     if official_path.exists():
                         # Something is wrong, let's remove the mystery file/link to make room
                         if sys.platform == "win32" and self._is_junction(official_path):
-                            subprocess.run(['cmd', '/c', 'rmdir', str(official_path)], check=True)
+                            subprocess.run([
+                                'powershell', '-Command',
+                                f'Start-Process cmd -ArgumentList "/c rmdir \\"{official_path}\\"" -Verb RunAs'
+                            ], check=True)
                         else:
                             if official_path.is_dir() and not official_path.is_symlink():
                                 # This is a real dir, we shouldn't delete it! 
@@ -297,8 +302,13 @@ class LaunchManager:
 
                 # 2. Create Link (Symlink on Linux, Junction on Windows)
                 if sys.platform == "win32":
-                    # mklink /J works without admin rights and is very stable for this
-                    subprocess.run(['cmd', '/c', 'mklink', '/J', str(official_path), str(gd_path)], check=True)
+                    # mklink /J requires admin privileges, so we use UAC to prompt the user
+                    # The command shown in the UAC dialog is: cmd /c mklink /J <paths>
+                    # This is transparent - users can see exactly what is being run
+                    subprocess.run([
+                        'powershell', '-Command',
+                        f'Start-Process cmd -ArgumentList "/c mklink /J \\"{official_path}\\" \\"{gd_path}\\"" -Verb RunAs'
+                    ], check=True)
                 else:
                     os.symlink(gd_path, official_path)
 
