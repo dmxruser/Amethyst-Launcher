@@ -299,6 +299,9 @@ class LauncherBridge(QObject):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    # Set Fusion style (respects system dark/light mode)
+    from PySide6.QtWidgets import QStyleFactory
+    app.setStyle(QStyleFactory.create("Fusion"))
     # Ensure palette follows system theme (dark/light mode)
     from PySide6.QtGui import QPalette, QIcon
     app.setPalette(QPalette())
