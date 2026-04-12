@@ -16,10 +16,12 @@ Dialog {
 
     title: qsTr("Download New Instance")
     x: (window.width - (width || 400)) / 2
-    y: (window.height - (height || 450)) / 2
+    y: (window.height - (height || 500)) / 2
     modal: true
+    closePolicy: Popup.NoAutoClose
     standardButtons: DialogButtonBox.Cancel
     width: 400
+    height: 500
     
     onVisibleChanged: {
         if (visible && launcher) {
@@ -47,22 +49,51 @@ Dialog {
         Label {
             id: setupWarning
             visible: false
-            text: qsTr("<b>Setup Required:</b> Complete the setup wizard before downloading.")
+            text: qsTr("Setup Required")
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
             font.pixelSize: 11
+            font.bold: true
             color: "#ff6600"
         }
 
-        Label {
-            text: qsTr("<b>Steam Client Required:</b> This launcher uses your installed Steam client's console to fetch official game files. You must be logged into a Steam account that owns Geometry Dash.")
-            wrapMode: Text.WordWrap
+        Rectangle {
+            id: steamWarningBox
             Layout.fillWidth: true
+            height: steamWarningText.height + 20
+            radius: 6
+            color: "#2a2a2a"
+            border.width: 1
+            border.color: "#444"
+            
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 12
+                
+                Label {
+                    id: steamWarningTitle
+                    text: qsTr("Steam Client Required")
+                    font.bold: true
+                    font.pixelSize: 13
+                    color: "#4db8ff"
+                }
+                
+                Label {
+                    id: steamWarningText
+                    text: qsTr("This launcher uses your Steam client to fetch official game files. Make sure Steam is running and you are logged into an account that owns Geometry Dash.")
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    font.pixelSize: 11
+                    color: "#cccccc"
+                }
+            }
+        }
+
+        Label {
+            text: qsTr("Instance Name:")
             font.pixelSize: 11
             color: systemPalette.text
         }
-
-        Rectangle { Layout.fillWidth: true; height: 1; color: systemPalette.mid }
 
         TextField {
             id: instanceName

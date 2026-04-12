@@ -24,7 +24,7 @@
         "geode_data_dirs": [
             "%LOCALAPPDATA%/Geode"
         ],
-        "default_instances_dir": "instances",
+        "default_instances_dir": "%LOCALAPPDATA%/Amethyst/instances",
         "steam_cmd": "steam",
         "open_cmd": "explorer",
         "wine_cmd": ""

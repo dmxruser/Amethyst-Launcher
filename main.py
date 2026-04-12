@@ -31,7 +31,7 @@ class LauncherBridge(QObject):
         self._geode_manager = GeodeManager(self._instance_model, self)
         self._downloader = Downloader()
           
-        self._config_path = Path("config.json")
+        self._config_path = Path(os.environ.get("LOCALAPPDATA", "")) / "Amethyst" / "config.json"
         self._username = ""
         self._remember_me = False
         self._download_path = str(config_manager.get_default_instances_dir().resolve())
@@ -58,6 +58,7 @@ class LauncherBridge(QObject):
 
     def _save_config(self):
         try:
+            self._config_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self._config_path, "w") as f:
                 json.dump({
                     "username": self._username,

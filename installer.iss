@@ -65,8 +65,8 @@ end;
 Source: "dist\AmethystLauncher\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\Amethyst Launcher"; Filename: "{app}\amethyst-launcher.exe"
-Name: "{autodesktop}\Amethyst Launcher"; Filename: "{app}\amethyst-launcher.exe"
+Name: "{group}\Amethyst Launcher"; Filename: "{app}\AmethystLauncher.exe"
+Name: "{autodesktop}\Amethyst Launcher"; Filename: "{app}\AmethystLauncher.exe"
 
 [Run]
-Filename: "{app}\amethyst-launcher.exe"; Description: "Launch Amethyst Launcher"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\AmethystLauncher.exe"; Description: "Launch Amethyst Launcher"; Flags: nowait postinstall skipifsilent
