@@ -16,6 +16,101 @@ GEODE_WINDOWS_MARKERS = {"geode.dll", "xinput1_4.dll"}
 GEODE_LINUX_MARKERS = {"geode", "libgeode.so", "Geode.dll"}
 GEODE_PROFILE_DIR = "profiles"
 
+SAVE_DIRS = ["CCLocalLevels.dat", "CCGameManager.dat", "CCGameManager2.dat", "CCUserCoin.dat", "CCLocalMediaPlayer.dat", "GJSaveData.dat"]
+
+
+def _get_save_dir_for_instance(instance_path: Path) -> Path:
+    if sys.platform == "win32":
+        return instance_path / "save_data"
+    else:
+        return instance_path / "save_data"
+
+
+def _get_default_save_dir() -> Path:
+    return config_manager.get_default_save_dir()
+
+
+def _create_junction(source: Path, target: Path) -> bool:
+    if sys.platform != "win32":
+        return False
+    try:
+        subprocess.run([
+            'powershell', '-Command',
+            f'Start-Process cmd -ArgumentList "/c mklink /J \\"{target}\\" \\"{source}\\"" -Verb RunAs'
+        ], check=True, capture_output=True)
+        return True
+    except Exception as e:
+        print(f"Failed to create junction: {e}")
+        return False
+
+
+def _remove_junction(path: Path) -> bool:
+    if sys.platform != "win32":
+        return False
+    try:
+        subprocess.run([
+            'powershell', '-Command',
+            f'Start-Process cmd -ArgumentList "/c rmdir \\"{path}\\"" -Verb RunAs'
+        ], check=True, capture_output=True)
+        return True
+    except Exception as e:
+        print(f"Failed to remove junction: {e}")
+        return False
+
+
+def _is_junction(path: Path) -> bool:
+    if sys.platform != "win32":
+        return False
+    try:
+        output = subprocess.check_output(['cmd', '/c', 'dir', str(path.parent)], text=True)
+        return f"<JUNCTION>     {path.name}" in output
+    except:
+        return False
+
+
+def _swap_save_dir(instance_save_dir: Path, default_save_dir: Path, create: bool):
+    """Swap the instance's save_data folder with the default save dir using a junction."""
+    default_save_dir = Path(default_save_dir)
+    instance_save_dir = Path(instance_save_dir)
+    
+    if create:
+        instance_save_dir.mkdir(parents=True, exist_ok=True)
+        
+        backup_dir = default_save_dir.parent / (default_save_dir.name + ".amethyst_backup")
+        
+        if default_save_dir.exists() and not _is_junction(default_save_dir):
+            if not backup_dir.exists():
+                shutil.move(str(default_save_dir), str(backup_dir))
+            else:
+                if default_save_dir.is_dir():
+                    shutil.rmtree(default_save_dir)
+                else:
+                    default_save_dir.unlink()
+        
+        if _is_junction(default_save_dir):
+            _remove_junction(default_save_dir)
+        
+        _create_junction(instance_save_dir, default_save_dir)
+        print(f"Linked saves: {default_save_dir} -> {instance_save_dir}")
+    else:
+        if _is_junction(default_save_dir):
+            _remove_junction(default_save_dir)
+            
+            backup_dir = default_save_dir.parent / (default_save_dir.name + ".amethyst_backup")
+            if backup_dir.exists():
+                shutil.move(str(backup_dir), str(default_save_dir))
+                print(f"Restored saves from backup")
+        
+        if instance_save_dir.exists():
+            if default_save_dir.exists():
+                if _is_junction(default_save_dir):
+                    _remove_junction(default_save_dir)
+            default_save_dir.mkdir(parents=True, exist_ok=True)
+            for f in SAVE_DIRS:
+                src = instance_save_dir / f
+                if src.exists():
+                    shutil.copy2(src, default_save_dir / f)
+
 class InstanceModel(QAbstractListModel):
     NameRole = Qt.UserRole + 1
     PathRole = Qt.UserRole + 2
@@ -23,6 +118,7 @@ class InstanceModel(QAbstractListModel):
     ProfilesRole = Qt.UserRole + 4
     OwnershipRole = Qt.UserRole + 5
     SourceRole = Qt.UserRole + 6
+    SaveDirRole = Qt.UserRole + 7
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -47,6 +143,8 @@ class InstanceModel(QAbstractListModel):
             return instance.get("ownership", "Unknown")
         elif role == self.SourceRole:
             return instance.get("source", "Steam")
+        elif role == self.SaveDirRole:
+            return instance.get("save_dir", "")
         return None
 
     def roleNames(self):
@@ -56,10 +154,11 @@ class InstanceModel(QAbstractListModel):
             self.GeodeRole: b"geode_enabled",
             self.ProfilesRole: b"profiles",
             self.OwnershipRole: b"ownership",
-            self.SourceRole: b"source"
+            self.SourceRole: b"source",
+            self.SaveDirRole: b"save_dir"
         }
 
-    def add_instance(self, name, path, geode_enabled=False, profiles=None, ownership="Unknown", source="Steam"):
+    def add_instance(self, name, path, geode_enabled=False, profiles=None, ownership="Unknown", source="Steam", save_dir=""):
         if profiles is None:
             profiles = []
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
@@ -69,7 +168,8 @@ class InstanceModel(QAbstractListModel):
             "geode_enabled": geode_enabled,
             "profiles": list(profiles),
             "ownership": ownership,
-            "source": source
+            "source": source,
+            "save_dir": save_dir
         })
         self.endInsertRows()
 
@@ -146,8 +246,11 @@ class LaunchManager:
         if instances_dir.exists() and instances_dir.is_dir():
             for item in instances_dir.iterdir():
                 if item.is_dir():
-                    # Check if it contains GeometryDash.exe
-                    exe_path = item / "GeometryDash.exe"
+                    # Check if it contains the game executable
+                    if sys.platform == "win32":
+                        exe_path = item / "GeometryDash.exe"
+                    else:
+                        exe_path = item / "geometry-dash" / "GeometryDash"
                     if exe_path.exists():
                         self._add_with_geode_check(item.name, item, source="Local")
 
@@ -190,7 +293,9 @@ class LaunchManager:
         else:
             ownership = "N/A (Local)"
 
-        self.model.add_instance(name, path, geode_enabled=geode_present, profiles=profiles, ownership=ownership, source=source)
+        save_dir = str(_get_save_dir_for_instance(path))
+
+        self.model.add_instance(name, path, geode_enabled=geode_present, profiles=profiles, ownership=ownership, source=source, save_dir=save_dir)
 
     def _parse_vdf(self, vdf_path, processed_libraries):
         found = False
@@ -217,16 +322,20 @@ class LaunchManager:
         instance = self.model._instances[index]
         gd_path = Path(instance["path"])
         source = instance.get("source", "Steam")
+        instance_save_dir = _get_save_dir_for_instance(gd_path)
+
+        if source == "Local":
+            default_save = _get_default_save_dir()
+            _swap_save_dir(instance_save_dir, default_save, create=True)
 
         if instance.get("geode_enabled") and profile and profile != "Default":
             activate_profile(str(gd_path), profile)
         else:
             deactivate_profile(str(gd_path))
 
-        def monitor_and_restore(official_path: Path, original_backup: Path):
+        def monitor_and_restore(official_path: Path, original_backup: Path, instance_save_dir: Path):
             """Monitors for the game process and restores the official folder when it exits."""
             try:
-                # Wait for process to start (up to 30s)
                 found = False
                 for _ in range(60):
                     if self._is_game_running():
@@ -235,13 +344,15 @@ class LaunchManager:
                     time.sleep(0.5)
                 
                 if found:
-                    # Wait for process to exit
                     while self._is_game_running():
                         time.sleep(1)
                 else:
                     print("Game process never detected. Restoring anyway.")
             finally:
-                # Cleanup link/junction and restore
+                if source == "Local":
+                    default_save = _get_default_save_dir()
+                    _swap_save_dir(instance_save_dir, default_save, create=False)
+                
                 if official_path.exists() or (sys.platform == "win32" and self._is_junction(official_path)):
                     if sys.platform == "win32":
                         try:
@@ -316,7 +427,7 @@ class LaunchManager:
                 self._trigger_steam_launch()
 
                 # 4. Start restoration monitor
-                threading.Thread(target=monitor_and_restore, args=(official_path, original_backup), daemon=True).start()
+                threading.Thread(target=monitor_and_restore, args=(official_path, original_backup, instance_save_dir), daemon=True).start()
 
             except Exception as e:
                 print(f"Failed to perform symlink swap: {e}")

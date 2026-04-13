@@ -19,10 +19,15 @@
     "windows": {
         "steam_roots": [
             "C:/Program Files (x86)/Steam",
-            "C:/Program Files/Steam"
+            "C:/Program Files/Steam",
+            "D:/Program Files (x86)/Steam",
+            "D:/Program Files/Steam",
+            "%PROGRAMFILES(X86)%/Steam",
+            "%PROGRAMFILES%/Steam"
         ],
         "geode_data_dirs": [
-            "%LOCALAPPDATA%/Geode"
+            "%LOCALAPPDATA%/Geode",
+            "%PROGRAMDATA%/Geode"
         ],
         "default_instances_dir": "%LOCALAPPDATA%/Amethyst/instances",
         "steam_cmd": "steam",

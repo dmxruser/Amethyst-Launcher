@@ -116,11 +116,29 @@ class Downloader(QObject):
         self.finished.emit(True, "Download started. Copy files from Steam content folder to instance.")
 
     def _copy_files_to_instance(self, source_dir: Path, dest_dir: Path):
+        import ctypes
+        from ctypes import windll, WinError
+        import time
+
+        def copy_with_retry(src, dst, max_retries=3):
+            for attempt in range(max_retries):
+                try:
+                    shutil.copy2(src, dst)
+                    return True
+                except PermissionError:
+                    if attempt < max_retries - 1:
+                        time.sleep(1)
+                    else:
+                        raise
+            return False
+
         try:
             dest_dir.mkdir(parents=True, exist_ok=True)
 
             total_files = sum(1 for _ in source_dir.rglob('*') if _.is_file())
             copied = 0
+            failed = 0
+            failed_files = []
 
             for item in source_dir.rglob('*'):
                 if self._stop_requested:
@@ -132,16 +150,25 @@ class Downloader(QObject):
 
                 if item.is_file():
                     dest_path.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(item, dest_path)
-                    copied += 1
-                    progress = (copied / total_files) * 100
-                    self.progress.emit(progress)
-                    self.output_received.emit(f"Copied {copied}/{total_files}: {rel_path.name}")
+                    try:
+                        copy_with_retry(item, dest_path)
+                        copied += 1
+                        progress = (copied / total_files) * 100
+                        self.progress.emit(progress)
+                        self.output_received.emit(f"Copied {copied}/{total_files}: {rel_path.name}")
+                    except Exception as e:
+                        failed += 1
+                        failed_files.append(str(rel_path))
+                        self.output_received.emit(f"Failed to copy {rel_path.name}: {e}")
                 elif item.is_dir():
                     dest_path.mkdir(parents=True, exist_ok=True)
 
-            self.finished.emit(True, f"Successfully installed to {dest_dir}")
-            self.output_received.emit(f"Installation complete! Files copied to: {dest_dir}")
+            if failed > 0:
+                self.output_received.emit(f"Completed with {failed} file(s) failed. Try closing Steam.")
+                self.finished.emit(True, f"Installed to {dest_dir} ({copied}/{total_files} files, {failed} failed)")
+            else:
+                self.finished.emit(True, f"Successfully installed to {dest_dir}")
+                self.output_received.emit(f"Installation complete! Files copied to: {dest_dir}")
             self.instance_added.emit(str(dest_dir))
 
         except Exception as e:

@@ -1,6 +1,8 @@
 import os
 import shutil
 import sys
+import subprocess
+import ctypes
 from pathlib import Path
 from config.manager import config_manager
 
@@ -10,6 +12,37 @@ BACKUP_SUFFIX = ".default"
 SYMLINK_DIRS = ["mods", "config", "resources", "saved"]
 
 GD_APP_ID = "322170"
+
+
+def _create_junction(source: Path, target: Path) -> bool:
+    """Create a Windows junction. Returns True on success."""
+    if sys.platform != "win32":
+        return False
+    try:
+        subprocess.run([
+            'powershell', '-Command',
+            f'Start-Process cmd -ArgumentList "/c mklink /J \\"{target}\\" \\"{source}\\"" -Verb RunAs'
+        ], check=True, capture_output=True)
+        return True
+    except Exception as e:
+        print(f"Failed to create junction: {e}")
+        return False
+
+
+def _remove_junction(path: Path) -> bool:
+    """Remove a Windows junction. Returns True on success."""
+    if sys.platform != "win32":
+        return False
+    try:
+        subprocess.run([
+            'powershell', '-Command',
+            f'Start-Process cmd -ArgumentList "/c rmdir \\"{path}\\"" -Verb RunAs'
+        ], check=True, capture_output=True)
+        return True
+    except Exception as e:
+        print(f"Failed to remove junction: {e}")
+        return False
+
 
 def get_geode_data_dir(gd_path: Path):
     gd_path = Path(gd_path)
@@ -54,37 +87,42 @@ def activate_profile(gd_path: str, profile_name: str):
         src = profile_path / d
         dst = geode_dir / d
 
-        # Ensure source directory exists in the profile
         if not src.exists():
             src.mkdir(parents=True, exist_ok=True)
 
-        # Handle destination
-        if dst.is_symlink():
-            dst.unlink()
+        is_junction = False
+        if sys.platform == "win32":
+            try:
+                output = subprocess.check_output(['cmd', '/c', 'dir', str(dst.parent)], text=True)
+                is_junction = f"<JUNCTION>     {dst.name}" in output
+            except:
+                pass
+
+        if dst.is_symlink() or is_junction:
+            if is_junction:
+                _remove_junction(dst)
+            else:
+                dst.unlink()
         elif dst.exists():
-            # Backup existing 'default' data if it hasn't been backed up yet
             backup = Path(str(dst) + BACKUP_SUFFIX)
             if not backup.exists():
                 print(f"Backing up {dst} to {backup}")
                 shutil.move(str(dst), str(backup))
             else:
-                # If backup exists, we can safely remove the current one to make room for symlink
                 if dst.is_dir():
                     shutil.rmtree(dst)
                 else:
                     dst.unlink()
 
-        # Create symlink
-        try:
-            if sys.platform == "win32":
-                # On Windows, we need to handle junction vs symlink or just use symlink_to with privilege
-                # Usually junctions are safer if not running as admin, but target_is_directory=True helps
+        if sys.platform == "win32":
+            if not _create_junction(src.resolve(), dst):
+                print(f"Failed to create junction for {dst}")
+        else:
+            try:
                 dst.symlink_to(src.resolve(), target_is_directory=True)
-            else:
-                dst.symlink_to(src.resolve(), target_is_directory=True)
-            print(f"Symlinked {dst} -> {src}")
-        except Exception as e:
-            print(f"Failed to symlink {dst}: {e}")
+                print(f"Symlinked {dst} -> {src}")
+            except Exception as e:
+                print(f"Failed to symlink {dst}: {e}")
 
     return True
 
@@ -95,16 +133,26 @@ def deactivate_profile(gd_path: str):
 
     for d in SYMLINK_DIRS:
         dst = geode_dir / d
-        if dst.is_symlink():
-            dst.unlink()
 
-        # Restore from backup if it exists
+        is_junction = False
+        if sys.platform == "win32":
+            try:
+                output = subprocess.check_output(['cmd', '/c', 'dir', str(dst.parent)], text=True)
+                is_junction = f"<JUNCTION>     {dst.name}" in output
+            except:
+                pass
+
+        if dst.is_symlink() or is_junction:
+            if is_junction:
+                _remove_junction(dst)
+            else:
+                dst.unlink()
+
         backup = Path(str(dst) + BACKUP_SUFFIX)
         if backup.exists() and not dst.exists():
             print(f"Restoring {dst} from {backup}")
             shutil.move(str(backup), str(dst))
         
-        # If no backup and still doesn't exist, create an empty one
         if not dst.exists():
             dst.mkdir(parents=True, exist_ok=True)
             

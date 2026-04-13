@@ -266,6 +266,12 @@ class LauncherBridge(QObject):
             return self._instance_model._instances[index].get("path", "")
         return ""
 
+    @Slot(int, result=str)
+    def get_save_dir(self, index):
+        if 0 <= index < self._instance_model.rowCount():
+            return self._instance_model._instances[index].get("save_dir", "")
+        return ""
+
     @Slot(str, str, str, str, str, str, str)
     def start_download(self, username, password, name, app_id, depot_id, manifest_id, code):
         dest = Path(self._download_path) / name

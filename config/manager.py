@@ -7,7 +7,6 @@ class ConfigManager:
     def __init__(self):
         self.platform = "windows" if sys.platform == "win32" else "linux"
         
-        # Handle frozen (bundled) paths for PyInstaller
         if hasattr(sys, "_MEIPASS"):
             self.base_path = Path(sys._MEIPASS)
         else:
@@ -58,5 +57,12 @@ class ConfigManager:
 
     def get_wine_cmd(self):
         return self.paths.get("wine_cmd", "")
+
+    def get_default_save_dir(self):
+        if self.platform == "windows":
+            return Path(os.path.expandvars("%LOCALAPPDATA%")) / "GeometryDash"
+        elif self.platform == "linux":
+            return Path(os.path.expanduser("~/.local/share/GeometryDash"))
+        return None
 
 config_manager = ConfigManager()

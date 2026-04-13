@@ -80,24 +80,32 @@ class GeodeManager:
         instance = self.model._instances[instance_index]
         gd_path = Path(instance["path"])
         
-        # We need the markers from launch/manager.py really, but we can redefine for local use
         markers = ["geode.dll", "xinput1_4.dll", "geode", "libgeode.so", "Geode.dll"]
         
+        import time
         found_any = False
         if enabled:
-            # Look for .disabled files and enable them
             for f in os.listdir(gd_path):
                 if f.lower().endswith(".disabled"):
-                    base = f[:-9] # remove .disabled
+                    base = f[:-9]
                     if base.lower() in markers:
-                        os.rename(gd_path / f, gd_path / base)
-                        found_any = True
+                        for _ in range(3):
+                            try:
+                                os.rename(gd_path / f, gd_path / base)
+                                found_any = True
+                                break
+                            except PermissionError:
+                                time.sleep(0.5)
         else:
-            # Look for active markers and disable them
             for f in os.listdir(gd_path):
                 if f.lower() in markers:
-                    os.rename(gd_path / f, gd_path / (f + ".disabled"))
-                    found_any = True
+                    for _ in range(3):
+                        try:
+                            os.rename(gd_path / f, gd_path / (f + ".disabled"))
+                            found_any = True
+                            break
+                        except PermissionError:
+                            time.sleep(0.5)
 
         instance["geode_enabled"] = enabled
         idx = self.model.index(instance_index, 0)
