@@ -60,22 +60,25 @@ Dialog {
         Rectangle {
             id: steamWarningBox
             Layout.fillWidth: true
-            height: steamWarningTitle.height + steamWarningText.height + 30
-            radius: 6
-            color: "#2a2a2a"
+            Layout.preferredHeight: steamWarningLayout.implicitHeight + 24
+            radius: 2
+            color: systemPalette.window
             border.width: 1
-            border.color: "#444"
+            border.color: systemPalette.mid
             
             ColumnLayout {
+                id: steamWarningLayout
                 anchors.fill: parent
                 anchors.margins: 12
+                spacing: 6
                 
                 Label {
                     id: steamWarningTitle
                     text: qsTr("Steam Client Required")
                     font.bold: true
-                    font.pixelSize: 13
-                    color: "#4db8ff"
+                    font.pixelSize: 12
+                    color: systemPalette.text
+                    Layout.fillWidth: true
                 }
                 
                 Label {
@@ -84,7 +87,9 @@ Dialog {
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     font.pixelSize: 11
-                    color: "#cccccc"
+                    lineHeight: 1.2
+                    color: systemPalette.text
+                    opacity: 0.85
                 }
             }
         }
