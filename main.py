@@ -34,6 +34,7 @@ class LauncherBridge(QObject):
         self._launch_manager = LaunchManager(self._instance_model)
         self._geode_manager = GeodeManager(self._instance_model, self)
         self._downloader = Downloader()
+        self._downloader.instance_added.connect(self._on_instance_added)
           
         self._config_path = Path(os.environ.get("LOCALAPPDATA", "")) / "Amethyst" / "config.json"
         self._username = ""
@@ -158,6 +159,13 @@ class LauncherBridge(QObject):
         """Re-checks setup status and updates UI."""
         self._setup_status = self.check_setup_status()
 
+    @Slot(str)
+    def _on_instance_added(self, path):
+        name = Path(path).name
+        self._launch_manager.model.add_instance(
+            name, path, geode_enabled=False, profiles=["Default"], ownership="Owned", source="Local"
+        )
+
     @Slot()
     def request_folder_permissions(self):
         """Runs icacls as Administrator to grant folder permissions on Windows."""
@@ -196,13 +204,6 @@ class LauncherBridge(QObject):
             print(f"Blocking launch for instance {index}: Invalid ownership")
             return
         self._launch_manager.launch(index, None)
-
-    @Slot(int, str)
-    def launch_instance_with_profile(self, index, profile):
-        if not self._is_steam_valid(index):
-            print(f"Blocking launch for instance {index}: Invalid ownership")
-            return
-        self._launch_manager.launch(index, profile)
 
     @Slot(int)
     @Slot(int, str)
