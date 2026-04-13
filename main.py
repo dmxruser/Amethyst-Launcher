@@ -198,12 +198,12 @@ class LauncherBridge(QObject):
             open_cmd = config_manager.get_open_cmd()
             subprocess.Popen([open_cmd, url])
 
-    @Slot(int)
-    def launch_instance(self, index):
+    @Slot(int, str)
+    def launch_instance_with_profile(self, index, profile):
         if not self._is_steam_valid(index):
             print(f"Blocking launch for instance {index}: Invalid ownership")
             return
-        self._launch_manager.launch(index, None)
+        self._launch_manager.launch(index, profile)
 
     @Slot(int)
     @Slot(int, str)

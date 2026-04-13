@@ -31,12 +31,13 @@ class ConfigManager:
     def _resolve_path(self, path_str):
         if not path_str:
             return None
-        # Resolve ~ for home
         path_str = os.path.expanduser(path_str)
-        # Resolve %ENV% for windows
         if self.platform == "windows":
             path_str = os.path.expandvars(path_str)
-        return Path(path_str)
+        resolved = Path(path_str)
+        if not resolved.is_absolute():
+            resolved = self.base_path / resolved
+        return resolved
 
     def get_steam_roots(self):
         roots = self.paths.get("steam_roots", [])
