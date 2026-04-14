@@ -40,7 +40,30 @@ class ConfigManager:
 
     def get_steam_roots(self):
         roots = self.paths.get("steam_roots", [])
-        return [self._resolve_path(r) for r in roots]
+        resolved = [self._resolve_path(r) for r in roots]
+        
+        if self.platform == "windows":
+            try:
+                import winreg
+                for hive in [winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER]:
+                    for subkey in [
+                        r"SOFTWARE\Valve\Steam",
+                        r"SOFTWARE\WOW6432Node\Valve\Steam"
+                    ]:
+                        try:
+                            key = winreg.OpenKey(hive, subkey)
+                            install_path, _ = winreg.QueryValueEx(key, "InstallPath")
+                            if install_path:
+                                path = Path(install_path)
+                                if path not in resolved:
+                                    resolved.append(path)
+                            winreg.CloseKey(key)
+                        except FileNotFoundError:
+                            pass
+            except Exception:
+                pass
+        
+        return resolved
 
     def get_geode_data_dirs(self):
         dirs = self.paths.get("geode_data_dirs", [])

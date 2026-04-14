@@ -1,0 +1,79 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: false
+        default: ''
+      platform:
+        description: 'Platform to build'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - linux
+          - windows
+
+jobs:
+  build-linux:
+    if: inputs.platform == 'all' || inputs.platform == 'linux'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller pyside6==6.7.0
+
+      - name: Build with PyInstaller
+        run: pyinstaller amethyst.spec --noconfirm
+
+      - name: Create archive
+        run: |
+          cd dist
+          tar -cvzf AmethystLauncher-linux.tar.gz AmethystLauncher/
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: amethyst-linux
+          path: dist/AmethystLauncher-linux.tar.gz
+          retention-days: 30
+
+  build-windows:
+    if: inputs.platform == 'all' || inputs.platform == 'windows'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller pyside6==6.7.0
+
+      - name: Build with PyInstaller
+        run: pyinstaller amethyst.spec --noconfirm
+
+      - name: Create archive
+        run: |
+          Compress-Archive -Path "dist\AmethystLauncher\*" -DestinationPath "dist\AmethystLauncher-windows.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: amethyst-windows
+          path: dist/AmethystLauncher-windows.zip
+          retention-days: 30

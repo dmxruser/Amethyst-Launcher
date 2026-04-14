@@ -17,6 +17,7 @@ Dialog {
     signal geodeToggled(bool enabled)
     signal instanceRenamed(string newName)
     signal installGeode()
+    property bool canInstallGeode: true
     
     SystemPalette {
         id: systemPalette
@@ -45,6 +46,9 @@ Dialog {
         if (root.instanceIndex === -1) return
         nameField.text = launcher.instanceModel().data(launcher.instanceModel().index(root.instanceIndex, 0), 257)
         geodeEnabledCheck.checked = launcher.get_geode_enabled(root.instanceIndex)
+        var src = launcher.get_source(root.instanceIndex)
+        var ownership = launcher.get_ownership(root.instanceIndex)
+        root.canInstallGeode = (src === "Local") || (ownership === "Owned") || (ownership === "Family Shared")
         refreshProfiles()
     }
     
@@ -101,6 +105,7 @@ Dialog {
                     Item { Layout.fillWidth: true }
                     Button {
                         text: qsTr("Download/Update Loader")
+                        enabled: root.canInstallGeode
                         onClicked: root.installGeode()
                     }
                 }
