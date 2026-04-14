@@ -49,7 +49,7 @@ jobs:
           path: dist/AmethystLauncher-linux.tar.gz
           retention-days: 30
 
-  build-windows:
+build-windows:
     if: inputs.platform == 'all' || inputs.platform == 'windows'
     runs-on: windows-latest
     steps:
@@ -67,13 +67,21 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller amethyst.spec --noconfirm
 
-      - name: Create archive
+      - name: Install Inno Setup
         run: |
-          Compress-Archive -Path "dist\AmethystLauncher\*" -DestinationPath "dist\AmethystLauncher-windows.zip"
+          choco install innosetup -y
+
+      - name: Build Installer
+        run: |
+          iscc installer.iss
+
+      - name: Find installer
+        run: |
+          Get-ChildItem -Filter "*.exe" -Path "." -Recurse | Where-Object { $_.Name -like "AmethystLauncher-*.exe" } | Select-Object -ExpandProperty FullName
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: amethyst-windows
-          path: dist/AmethystLauncher-windows.zip
+          name: amethyst_windows
+          path: AmethystLauncher-*.exe
           retention-days: 30
