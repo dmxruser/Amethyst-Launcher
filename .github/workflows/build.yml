@@ -66,7 +66,7 @@ jobs:
           echo "${{ inputs.version }}" > VERSION
           (Get-Content amethyst.spec) -replace '0.1.0a', '${{ inputs.version }}' | Set-Content amethyst.spec
           $mainPy = Get-Content main.py -Raw
-          $mainPy = $mainPy -replace 'VERSION = "0.1.0a"', "VERSION = `"${{ inputs.version }}`""
+          $mainPy = $mainPy -replace 'VERSION = "0.1.0a"', "VERSION = `"$($env:GITHUB_REF_NAME)`""
           Set-Content -Path main.py -Value $mainPy
           (Get-Content installer.iss) -replace '0\.1\.0a', '${{ inputs.version }}' | Set-Content installer.iss
 
