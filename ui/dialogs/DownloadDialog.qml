@@ -8,6 +8,7 @@ Dialog {
     property alias statusText: downloadStatusLabel.text
     property alias needsSetup: setupWarning.visible
     property var launcher
+    property string logText: ""
 
     SystemPalette {
         id: systemPalette
@@ -25,6 +26,9 @@ Dialog {
     
     onVisibleChanged: {
         if (visible && launcher) {
+            var log = launcher.get_debug_log()
+            root.logText = log
+            
             var status = launcher.check_setup_status()
             root.needsSetup = (status !== "ready")
             if (status === "needs_ownership") {
@@ -146,5 +150,35 @@ Dialog {
             font.pixelSize: 10
             color: systemPalette.mid
         }
+
+        Button {
+            text: qsTr("View Logs")
+            Layout.fillWidth: true
+            onClicked: {
+                logDialog.logText = root.logText
+                logDialog.open()
+            }
+        }
+    }
+
+    Dialog {
+        id: logDialog
+        title: qsTr("Debug Logs")
+        width: 500
+        height: 400
+        standardButtons: DialogButtonBox.Close
+
+        ScrollView {
+            anchors.fill: parent
+            TextArea {
+                id: logTextArea
+                readOnly: true
+                text: logDialog.logText
+                font.family: "monospace"
+                font.pixelSize: 10
+            }
+        }
+
+        property string logText: ""
     }
 }

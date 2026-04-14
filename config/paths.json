@@ -22,8 +22,16 @@
             "C:/Program Files/Steam",
             "D:/Program Files (x86)/Steam",
             "D:/Program Files/Steam",
+            "E:/Program Files (x86)/Steam",
+            "E:/Program Files/Steam",
+            "F:/Program Files (x86)/Steam",
+            "F:/Program Files/Steam",
             "%PROGRAMFILES(X86)%/Steam",
-            "%PROGRAMFILES%/Steam"
+            "%PROGRAMFILES%/Steam",
+            "%STEAMROOT%/Steam",
+            "%SteamInstall%",
+            "%USERPROFILE%/Steam",
+            "%LOCALAPPDATA%/Local/Steam"
         ],
         "geode_data_dirs": [
             "%LOCALAPPDATA%/Geode",

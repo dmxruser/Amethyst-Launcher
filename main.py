@@ -159,6 +159,33 @@ class LauncherBridge(QObject):
         """Re-checks setup status and updates UI."""
         self._setup_status = self.check_setup_status()
 
+    @Slot(result=str)
+    def get_debug_log(self):
+        """Returns debug info for troubleshooting."""
+        from io import StringIO
+        import traceback
+        
+        output = StringIO()
+        output.write("=== Debug Log ===\n\n")
+        
+        output.write(f"Platform: {sys.platform}\n")
+        
+        from config.manager import config_manager
+        steam_roots = config_manager.get_steam_roots()
+        output.write(f"\nSteam roots checked:\n")
+        for p in steam_roots:
+            exists = "EXISTS" if p and p.exists() else "NOT FOUND"
+            output.write(f"  {p}: {exists}\n")
+        
+        from startup.ownership import check_gd_ownership, get_steam_root
+        steam_root = get_steam_root()
+        output.write(f"\nSteam root found: {steam_root}\n")
+        
+        ownership = check_gd_ownership()
+        output.write(f"\nOwnership check: {ownership}\n")
+        
+        return output.getvalue()
+
     @Slot(str)
     def _on_instance_added(self, path):
         name = Path(path).name

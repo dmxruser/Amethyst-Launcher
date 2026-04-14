@@ -42,6 +42,13 @@ ApplicationWindow {
                     text: qsTr("Settings")
                     onClicked: settingsDialog.open()
                 }
+                ToolButton {
+                    text: qsTr("Logs")
+                    onClicked: {
+                        logDialog.logText = launcher ? launcher.get_debug_log() : "No launcher"
+                        logDialog.open()
+                    }
+                }
                 Item { Layout.fillWidth: true }
                 ToolButton {
                     text: qsTr("Refresh")
@@ -161,6 +168,27 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    Dialog {
+        id: logDialog
+        title: qsTr("Debug Logs")
+        width: 500
+        height: 400
+        standardButtons: DialogButtonBox.Close
+
+        ScrollView {
+            anchors.fill: parent
+            TextArea {
+                id: logTextArea
+                readOnly: true
+                text: logDialog.logText
+                font.family: "monospace"
+                font.pixelSize: 10
+            }
+        }
+
+        property string logText: ""
     }
 
     property string selectedProfile: "Default"

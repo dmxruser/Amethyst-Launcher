@@ -1,5 +1,6 @@
 import re
 import os
+import sys
 from pathlib import Path
 from config.manager import config_manager
 
@@ -41,10 +42,13 @@ def get_current_steam_user(steam_root: Path):
 def check_gd_ownership():
     """Checks if Geometry Dash is owned or family shared."""
     steam_root = get_steam_root()
+    print(f"[ownership] Steam root: {steam_root}")
     if not steam_root:
+        print(f"[ownership] No Steam found in: {config_manager.get_steam_roots()}")
         return "Unknown (Steam not found)"
         
     current_user = get_current_steam_user(steam_root)
+    print(f"[ownership] Current user: {current_user}")
     if not current_user:
         return "Unknown (User not found)"
         
