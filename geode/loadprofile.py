@@ -2,7 +2,6 @@ import os
 import shutil
 import sys
 import subprocess
-import ctypes
 from pathlib import Path
 from config.manager import config_manager
 
@@ -70,6 +69,21 @@ def get_geode_data_dir(gd_path: Path):
             return p
     
     return None
+
+def get_geode_version(gd_path: Path) -> str:
+    """Get the installed Geode version from the version file."""
+    geode_dir = get_geode_data_dir(gd_path)
+    if not geode_dir:
+        return "Not installed"
+    
+    version_file = geode_dir / "version"
+    if version_file.exists():
+        try:
+            return version_file.read_text().strip()
+        except Exception as e:
+            print(f"Error reading Geode version: {e}")
+    
+    return "Unknown"
 
 def activate_profile(gd_path: str, profile_name: str):
     geode_dir = get_geode_data_dir(Path(gd_path))

@@ -6,12 +6,13 @@ import sys
 import json
 import subprocess
 import os
-import ctypes
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 from PySide6.QtCore import QObject, Slot, QAbstractListModel, Property, Signal, QModelIndex
+
+VERSION = "0.1.0a"
 
 from launch.manager import LaunchManager, InstanceModel
 from geode.manager import GeodeManager
@@ -210,10 +211,13 @@ class LauncherBridge(QObject):
         
         cmd = f'icacls "{common_path}" /grant {current_user}:(OI)(CI)F /T'
         
-        try:
-            ctypes.shell32.ShellExecuteW(None, "runas", "cmd.exe", f"/c {cmd}", None, 1)
-        except Exception as e:
-            print(f"Failed to request permissions: {e}")
+        if sys.platform == "win32":
+            try:
+                ctypes.shell32.ShellExecuteW(None, "runas", "cmd.exe", f"/c {cmd}", None, 1)
+            except Exception as e:
+                print(f"Failed to request permissions: {e}")
+        else:
+            print("Permissions request not supported on this platform")
 
     @Slot()
     def open_steam_store(self):
@@ -274,6 +278,10 @@ class LauncherBridge(QObject):
         if 0 <= index < self._instance_model.rowCount():
             return self._instance_model._instances[index]["geode_enabled"]
         return False
+
+    @Slot(int, result=str)
+    def get_geode_version(self, index):
+        return self._geode_manager.get_version(index)
 
     @Slot(int, result=str)
     def get_ownership(self, index):
@@ -366,6 +374,7 @@ if __name__ == "__main__":
     bridge = LauncherBridge()
     engine.rootContext().setContextProperty("launcher", bridge)
     engine.rootContext().setContextProperty("downloader", bridge._downloader)
+    engine.rootContext().setContextProperty("appVersion", VERSION)
         
     qml_file = config_manager.get_qml_path("main.qml")
     engine.load(qml_file)

@@ -30,9 +30,9 @@ class ConfigManager:
     def _resolve_path(self, path_str):
         if not path_str:
             return None
-        path_str = os.path.expanduser(path_str)
         if self.platform == "windows":
             path_str = os.path.expandvars(path_str)
+        path_str = os.path.expanduser(path_str)
         resolved = Path(path_str)
         if not resolved.is_absolute():
             resolved = self.base_path / resolved

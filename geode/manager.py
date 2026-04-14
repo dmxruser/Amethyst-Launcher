@@ -7,7 +7,7 @@ import sys
 import urllib.request
 from pathlib import Path
 from PySide6.QtCore import QObject, Slot
-from geode.loadprofile import get_geode_data_dir, PROFILES_DIR
+from geode.loadprofile import get_geode_data_dir, get_geode_version, PROFILES_DIR
 
 
 # Just a lot of code for making profiles
@@ -25,6 +25,14 @@ class GeodeManager:
         if geode_data_dir:
             return geode_data_dir / PROFILES_DIR
         return None
+
+    def get_version(self, instance_index):
+        """Get the installed Geode version for an instance."""
+        if not (0 <= instance_index < self.model.rowCount()):
+            return "Invalid instance"
+        instance = self.model._instances[instance_index]
+        gd_path = Path(instance["path"])
+        return get_geode_version(gd_path)
     
     def create_profile(self, instance_index, name="New Profile"):
         #Checks for if it exists
