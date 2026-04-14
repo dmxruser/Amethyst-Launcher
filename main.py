@@ -12,7 +12,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 
 from PySide6.QtCore import QObject, Slot, QAbstractListModel, Property, Signal, QModelIndex
 
-VERSION = "0.1.0a"
+VERSION = "0.1.1a"
 
 from launch.manager import LaunchManager, InstanceModel
 from geode.manager import GeodeManager
