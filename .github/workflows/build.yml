@@ -65,9 +65,8 @@ jobs:
         run: |
           echo "${{ inputs.version }}" > VERSION
           (Get-Content amethyst.spec) -replace '0.1.0a', '${{ inputs.version }}' | Set-Content amethyst.spec
-          $content = Get-Content main.py -Raw
-          $content = $content -replace 'VERSION = "0.1.0a"', "VERSION = `"${{ inputs.version }}`""
-          Set-Content main.py -Value $content
+          (Get-Content main.py) -replace 'VERSION = "0.1.0a"', "VERSION = `"${{ inputs.version }}`" | Set-Content main.py
+          (Get-Content installer.iss) -replace '0.1.0a', '${{ inputs.version }}' | Set-Content installer.iss
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -84,12 +83,6 @@ jobs:
       - name: Install Inno Setup
         run: |
           choco install innosetup -y
-
-      - name: Update installer version
-        run: |
-          $ver = Get-Content VERSION -Raw -ErrorAction SilentlyContinue
-          if (-not $ver) { $ver = "0.1.0a" }
-          (Get-Content installer.iss) -replace '0.1.0a', $ver | Set-Content installer.iss
 
       - name: Build Installer
         run: |
