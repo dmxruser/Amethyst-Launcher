@@ -116,8 +116,6 @@ class Downloader(QObject):
         self.finished.emit(True, "Download started. Copy files from Steam content folder to instance.")
 
     def _copy_files_to_instance(self, source_dir: Path, dest_dir: Path):
-        import ctypes
-        from ctypes import windll, WinError
         import time
 
         def copy_with_retry(src, dst, max_retries=3):

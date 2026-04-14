@@ -6,7 +6,6 @@ import sys
 import json
 import subprocess
 import os
-import ctypes
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
@@ -210,10 +209,13 @@ class LauncherBridge(QObject):
         
         cmd = f'icacls "{common_path}" /grant {current_user}:(OI)(CI)F /T'
         
-        try:
-            ctypes.shell32.ShellExecuteW(None, "runas", "cmd.exe", f"/c {cmd}", None, 1)
-        except Exception as e:
-            print(f"Failed to request permissions: {e}")
+        if sys.platform == "win32":
+            try:
+                ctypes.shell32.ShellExecuteW(None, "runas", "cmd.exe", f"/c {cmd}", None, 1)
+            except Exception as e:
+                print(f"Failed to request permissions: {e}")
+        else:
+            print("Permissions request not supported on this platform")
 
     @Slot()
     def open_steam_store(self):

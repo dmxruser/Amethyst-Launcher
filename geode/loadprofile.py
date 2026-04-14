@@ -2,7 +2,6 @@ import os
 import shutil
 import sys
 import subprocess
-import ctypes
 from pathlib import Path
 from config.manager import config_manager
 
