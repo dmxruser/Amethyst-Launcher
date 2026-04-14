@@ -3,10 +3,6 @@ name: Build
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version number (e.g., 1.0.0)'
-        required: false
-        default: ''
       platform:
         description: 'Platform to build'
         required: false
@@ -19,7 +15,6 @@ on:
 
 jobs:
   build-linux:
-    if: inputs.platform == 'all' || inputs.platform == 'linux'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,8 +44,7 @@ jobs:
           path: dist/AmethystLauncher-linux.tar.gz
           retention-days: 30
 
-build-windows:
-    if: inputs.platform == 'all' || inputs.platform == 'windows'
+  build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
