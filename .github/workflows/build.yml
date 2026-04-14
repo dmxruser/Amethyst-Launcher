@@ -65,8 +65,10 @@ jobs:
         run: |
           echo "${{ inputs.version }}" > VERSION
           (Get-Content amethyst.spec) -replace '0.1.0a', '${{ inputs.version }}' | Set-Content amethyst.spec
-          (Get-Content main.py) -replace 'VERSION = "0.1.0a"', "VERSION = `"${{ inputs.version }}`" | Set-Content main.py
-          (Get-Content installer.iss) -replace '0.1.0a', '${{ inputs.version }}' | Set-Content installer.iss
+          $mainPy = Get-Content main.py -Raw
+          $mainPy = $mainPy -replace 'VERSION = "0.1.0a"', "VERSION = `"${{ inputs.version }}`""
+          Set-Content -Path main.py -Value $mainPy
+          (Get-Content installer.iss) -replace '0\.1\.0a', '${{ inputs.version }}' | Set-Content installer.iss
 
       - name: Set up Python
         uses: actions/setup-python@v5
