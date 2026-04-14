@@ -46,6 +46,7 @@ Dialog {
         if (root.instanceIndex === -1) return
         nameField.text = launcher.instanceModel().data(launcher.instanceModel().index(root.instanceIndex, 0), 257)
         geodeEnabledCheck.checked = launcher.get_geode_enabled(root.instanceIndex)
+        geodeVersionLabel.text = qsTr("Version: ") + (launcher ? launcher.get_geode_version(root.instanceIndex) : "")
         var src = launcher.get_source(root.instanceIndex)
         var ownership = launcher.get_ownership(root.instanceIndex)
         root.canInstallGeode = (src === "Local") || (ownership === "Owned") || (ownership === "Family Shared")
@@ -108,6 +109,14 @@ Dialog {
                         enabled: root.canInstallGeode
                         onClicked: root.installGeode()
                     }
+                }
+
+                Label {
+                    id: geodeVersionLabel
+                    text: qsTr("Version: ") + (launcher ? launcher.get_geode_version(root.instanceIndex) : "")
+                    Layout.fillWidth: true
+                    font.pixelSize: 10
+                    color: systemPalette.mid
                 }
                 
                 Frame {

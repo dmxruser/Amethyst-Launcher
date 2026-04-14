@@ -12,6 +12,8 @@ from PySide6.QtQml import QQmlApplicationEngine
 
 from PySide6.QtCore import QObject, Slot, QAbstractListModel, Property, Signal, QModelIndex
 
+VERSION = "0.1.0a"
+
 from launch.manager import LaunchManager, InstanceModel
 from geode.manager import GeodeManager
 from launch.downloader import Downloader
@@ -278,6 +280,10 @@ class LauncherBridge(QObject):
         return False
 
     @Slot(int, result=str)
+    def get_geode_version(self, index):
+        return self._geode_manager.get_version(index)
+
+    @Slot(int, result=str)
     def get_ownership(self, index):
         if 0 <= index < self._instance_model.rowCount():
             return self._instance_model._instances[index].get("ownership", "Unknown")
@@ -368,6 +374,7 @@ if __name__ == "__main__":
     bridge = LauncherBridge()
     engine.rootContext().setContextProperty("launcher", bridge)
     engine.rootContext().setContextProperty("downloader", bridge._downloader)
+    engine.rootContext().setContextProperty("appVersion", VERSION)
         
     qml_file = config_manager.get_qml_path("main.qml")
     engine.load(qml_file)

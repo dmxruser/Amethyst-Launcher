@@ -28,6 +28,7 @@ jobs:
         run: |
           echo "${{ inputs.version }}" > VERSION
           sed -i "s/0.1.0a/${{ inputs.version }}/g" amethyst.spec
+          sed -i "s/VERSION = \"0.1.0a\"/VERSION = \"${{ inputs.version }}\"/g" main.py
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -64,6 +65,9 @@ jobs:
         run: |
           echo "${{ inputs.version }}" > VERSION
           (Get-Content amethyst.spec) -replace '0.1.0a', '${{ inputs.version }}' | Set-Content amethyst.spec
+          $content = Get-Content main.py -Raw
+          $content = $content -replace 'VERSION = "0.1.0a"', "VERSION = `"${{ inputs.version }}`""
+          Set-Content main.py -Value $content
 
       - name: Set up Python
         uses: actions/setup-python@v5
