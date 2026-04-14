@@ -46,13 +46,13 @@ jobs:
         run: |
           cd dist
           VERSION=$(cat ../VERSION 2>/dev/null || echo "0.1.0a")
-          mkdir -p AmethystLauncher/usr/bin
-          mkdir -p AmethystLauncher/usr/share/applications
-          mkdir -p AmethystLauncher/usr/share/icons
-          cp AmethystLauncher AmethystLauncher/usr/bin/
-          cp ../amethst.png AmethystLauncher/usr/share/icons/ 2>/dev/null || true
-          printf 'Package: amethyst-launcher\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: amd64\nDepends: libc6, libstdc++6, libgl1-mesa-glx, libxcb-xinerama0, libxcb-cursor0, libxkbcommon-x11-0, libdbus-1-3\nMaintainer: Amethyst Team\nDescription: Amethyst Launcher\n' "$VERSION" > AmethystLauncher/DEBIAN/control
-          dpkg-deb --build AmethystLauncher AmethystLauncher-$VERSION.deb
+          mkdir -p AmethystLauncher-pkg/usr/bin
+          mkdir -p AmethystLauncher-pkg/usr/share/applications
+          mkdir -p AmethystLauncher-pkg/usr/share/icons
+          cp -r AmethystLauncher AmethystLauncher-pkg/usr/bin/AmethystLauncher
+          cp ../amethst.png AmethystLauncher-pkg/usr/share/icons/ 2>/dev/null || true
+          printf 'Package: amethyst-launcher\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: amd64\nDepends: libc6, libstdc++6, libgl1-mesa-glx, libxcb-xinerama0, libxcb-cursor0, libxkbcommon-x11-0, libdbus-1-3\nMaintainer: Amethyst Team\nDescription: Amethyst Launcher\n' "$VERSION" > AmethystLauncher-pkg/DEBIAN/control
+          dpkg-deb --build AmethystLauncher-pkg AmethystLauncher-$VERSION.deb
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
